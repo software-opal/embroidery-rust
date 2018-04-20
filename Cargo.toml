@@ -1,0 +1,8 @@
+[package]
+name = "embroidery-rust"
+version = "0.1.0"
+authors = ["Lee Symes <leesdolphin@gmail.com>"]
+
+[dependencies]
+error-chain = "0.11.0"
+euclid = "0.17.2"
