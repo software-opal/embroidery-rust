@@ -6,3 +6,4 @@ authors = ["Lee Symes <leesdolphin@gmail.com>"]
 [dependencies]
 error-chain = "0.11.0"
 euclid = "0.17.2"
+bigdecimal = "0.0.11"
