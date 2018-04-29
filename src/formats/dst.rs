@@ -1,9 +1,11 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
+use bigdecimal::BigDecimal;
+
 use formats::errors::{Error, ErrorKind, Result};
 use formats::traits::PatternLoader;
-use formats::utils::read_to_iter;
+use formats::utils::ReadByteIterator;
 use pattern::pattern::{Pattern, PatternAttribute};
 
 pub struct DstPatternLoader {}
@@ -12,7 +14,7 @@ impl PatternLoader for DstPatternLoader {
     fn is_loadable(&self, item: &mut Read) -> Result<bool> {
         // Load the header
         // Check the last byte of the file? maybe
-        let mut iter = read_to_iter(item);
+        let mut iter = ReadByteIterator::new(item);
         return match read_dst_header(&mut iter) {
             Err(Error(ErrorKind::InvalidFormatError(_), _)) => Ok(false),
             Err(error) => Err(error),
@@ -22,9 +24,8 @@ impl PatternLoader for DstPatternLoader {
 
     fn read_pattern(&self, item: &mut Read) -> Result<Pattern> {
         // Read the header
-        let mut iter = read_to_iter(item);
+        let mut iter = ReadByteIterator::new(item);
         read_dst_header(&mut iter)?;
-        // return Err("SSSSS"::into());
         return Ok(Pattern {
             name: "dave".to_owned(),
             attributes: vec![],
@@ -57,37 +58,29 @@ fn read_header_item(mut header_iter: &mut Iterator<Item = u8>) -> Result<Option<
     };
     match header {
         b"   " => return Ok(None),
-        b"LA:" => {
-            return Ok(Some(PatternAttribute::Title(
-                String::from_utf8_lossy(content).into(),
-            )))
-        }
-        b"ST:" => {
-            return Ok(Some(PatternAttribute::StitchCount(
-                uint_from_decimal_bytes(content)?,
-            )))
-        }
-        b"CO:" => {
-            return Ok(Some(PatternAttribute::ColorChangeCount(
-                uint_from_decimal_bytes(content)?,
-            )))
-        }
-        b"+X:" => {
-            return Ok(Some(PatternAttribute::BoundsMinX(
-                decimal_from_decimal_bytes(content)?,
-            )))
-        }
-
-        // case cci('C','O'): /* Color change count, 3 digits padded by leading 0's */
-        // case cci('+','X'): /* Design extents (+/-X,+/-Y), 5 digits padded by leading 0's */
-        // case cci('-','X'):
-        // case cci('+','Y'):
-        // case cci('-','Y'):
-        // }
-        _ => {}
+        b"LA:" => Ok(Some(PatternAttribute::Title(
+            String::from_utf8_lossy(content).into(),
+        ))),
+        b"ST:" => Ok(Some(PatternAttribute::StitchCount(
+            uint_from_decimal_bytes(content)?,
+        ))),
+        b"CO:" => Ok(Some(PatternAttribute::ColorChangeCount(
+            uint_from_decimal_bytes(content)?,
+        ))),
+        b"+X:" => Ok(Some(PatternAttribute::BoundsMinX(
+            decimal_from_decimal_bytes(content)?,
+        ))),
+        b"+Y:" => Ok(Some(PatternAttribute::BoundsMinY(
+            decimal_from_decimal_bytes(content)?,
+        ))),
+        b"-X:" => Ok(Some(PatternAttribute::BoundsMaxX(
+            decimal_from_decimal_bytes(content)?,
+        ))),
+        b"-Y:" => Ok(Some(PatternAttribute::BoundsMaxY(
+            decimal_from_decimal_bytes(content)?,
+        ))),
+        _ => Ok(None),
     }
-
-    return Ok(None);
 }
 
 fn uint_from_decimal_bytes(items: &Vec<u8>) -> Result<u32> {
@@ -103,24 +96,23 @@ fn uint_from_decimal_bytes(items: &Vec<u8>) -> Result<u32> {
             );
         }
     }
-    return Ok(value);
+    Ok(value)
 }
-//
-// fn read_int_from_header(in_bytes: &mut Iterator<Item = u8>, num_bytes: usize) -> Result<u32> {
-//     let mut value: u32 = 0;
-//     for byte in in_bytes.take(num_bytes) {
-//         if b'0' <= byte && byte <= b'9' {
-//             value = (10 * value) + (byte - b'0') as u32;
-//         } else if b' ' == byte {
-//             continue;
-//         } else {
-//             return Err(
-//                 ErrorKind::InvalidFormatError("Invalid byte in header number.".to_owned()).into(),
-//             );
-//         }
-//     }
-//     return Ok(value);
-// }
+
+fn decimal_from_decimal_bytes(items: &Vec<u8>) -> Result<BigDecimal> {
+    let mut items_copy = items.clone();
+    let decimal_pos = match items.iter().position(|&s| s == b'.') {
+        None => items.len(),
+        Some(idx) => {
+            items_copy.remove(idx);
+            items.len() - idx
+        }
+    };
+    match uint_from_decimal_bytes(&items_copy) {
+        Ok(value) => Ok(BigDecimal::new(value.into(), decimal_pos as i64)),
+        Err(error) => Err(error),
+    }
+}
 
 fn read_header_name(in_bytes: &mut Iterator<Item = u8>) -> Option<[u8; 3]> {
     let header_bytes = Vec::from_iter(in_bytes.take(3));
@@ -134,7 +126,7 @@ fn read_header_name(in_bytes: &mut Iterator<Item = u8>) -> Option<[u8; 3]> {
 fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> Option<Vec<u8>> {
     let mut items = Vec::new();
     for item in in_bytes {
-        if item == b'\n' {
+        if item == b'\r' {
             break;
         } else {
             items.push(item)
@@ -144,4 +136,52 @@ fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> Option<Vec<u8>> {
         return Some(items);
     }
     return None;
+}
+
+#[cfg(test)]
+mod tests {
+    use formats::dst::*;
+
+    static HEADER_SAMPLE: &[u8] = (b"LA:crown FS 40     \rST:   4562\rCO:  7\r+X:  362\r"
+        + b"-X:  357\r+Y:  240\r-Y:  267\rAX:+   15\rAY:-   24\r"
+        + b"MX:+    0\rMY:+    0\rPD:******\r\32                "
+        + b"                                               "
+        + b"                                               "
+        + b"                                               "
+        + b"                                               "
+        + b"                                               "
+        + b"                                               "
+        + b"                                               "
+        + b"                                          ");
+
+    macro_rules! to_u8_iter {
+        ($t:expr) => {
+            &mut $t.iter().map(|&x| x)
+        };
+    }
+
+    #[test]
+    fn test_read_header_name() {
+        assert_eq!(read_header_name(to_u8_iter!(b"ab")), None);
+
+        let iter = to_u8_iter!(b"abcd");
+        assert_eq!(read_header_name(iter), Some([b'a', b'b', b'c']));
+        assert_eq!(iter.next(), Some(b'd'));
+    }
+
+    #[test]
+    fn test_read_header_content() {
+        assert_eq!(read_header_content(to_u8_iter!(b"")), None);
+        assert_eq!(read_header_content(to_u8_iter!(b"\r")), None);
+
+        assert_eq!(
+            read_header_content(to_u8_iter!(b"ab")),
+            Some(vec![b'a', b'b'])
+        );
+
+        let iter = to_u8_iter!(b"abc\rd");
+        assert_eq!(read_header_content(iter), Some(vec![b'a', b'b', b'c']));
+        assert_eq!(iter.next(), Some(b'd'));
+    }
+
 }

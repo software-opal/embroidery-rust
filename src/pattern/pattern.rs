@@ -7,6 +7,9 @@ pub enum PatternAttribute {
     StitchCount(u32),
     ColorChangeCount(u32),
     BoundsMinX(BigDecimal),
+    BoundsMinY(BigDecimal),
+    BoundsMaxX(BigDecimal),
+    BoundsMaxY(BigDecimal),
 }
 
 pub struct Pattern {
