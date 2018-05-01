@@ -12,6 +12,7 @@ A stitch represents the x,y coordinates in millimeters.
 
 use pattern::thread::Thread;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Stitch {
     pub x: f64,
     pub y: f64,
@@ -33,6 +34,7 @@ impl Stitch {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct StitchGroup {
     pub stitches: Vec<Stitch>,
     pub thread: Option<Thread>,

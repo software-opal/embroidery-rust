@@ -1,17 +1,14 @@
-use bigdecimal::BigDecimal;
-
 use pattern::stitch::StitchGroup;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum PatternAttribute {
+    Arbitary(String, String),
     Title(String),
-    StitchCount(u32),
-    ColorChangeCount(u32),
-    BoundsMinX(BigDecimal),
-    BoundsMinY(BigDecimal),
-    BoundsMaxX(BigDecimal),
-    BoundsMaxY(BigDecimal),
+    Author(String),
+    Copyright(String),
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Pattern {
     pub name: String,
     pub attributes: Vec<PatternAttribute>,
