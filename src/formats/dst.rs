@@ -50,6 +50,8 @@ fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribut
             _ => break,
         }
     }
+    // Drain the rest of the iterator.
+    header_iter.last();
     return Ok(attrs);
 }
 
@@ -118,17 +120,21 @@ fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<Vec<u8
     }
 }
 
+enum StitchInformation {
+    Move(i8),
+    Jump,
+    ColorChange,
+}
+
+fn read_stitches(item: &mut Iterator<Item = u8>) {
+    read_stitch(item);
+}
+
+fn read_stitch() {}
+
 #[cfg(test)]
 mod tests {
     use formats::dst::*;
-
-    // Taken from `tests/dst/Crown.DST`
-    static BASIC_HEADER_SAMPLE: &[u8] = b"\
-LA:crown FS 40     \rST:   4562\rCO:  7\r+X:  362\r\
--X:  357\r+Y:  240\r-Y:  267\rAX:+   15\rAY:-   24\r\
-MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
-
-    // TODO: Find more complex examples, possibly including: thread colours, copyright, author strings.
 
     macro_rules! to_u8_iter {
         ($t:expr) => {
@@ -182,8 +188,15 @@ MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
         assert_eq!(iter.next(), Some(b'd'));
     }
 
+    // TODO: Find more complex examples, possibly including: thread colours, copyright, author strings.
     #[test]
     fn test_read_dst_header() {
+        // Taken from `tests/dst/crown.dst`
+        let BASIC_HEADER_SAMPLE = b"\
+LA:crown FS 40     \rST:   4562\rCO:  7\r+X:  362\r\
+-X:  357\r+Y:  240\r-Y:  267\rAX:+   15\rAY:-   24\r\
+MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
+
         let result = read_dst_header(to_u8_iter!(HEADER_SAMPLE)).unwrap();
         let mut iter = result.iter();
         assert_eq!(
