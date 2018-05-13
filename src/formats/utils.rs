@@ -43,3 +43,8 @@ impl<T: Read + Sized> Iterator for ReadByteIterator<T> {
         }
     }
 }
+
+#[inline]
+pub fn is_byte_set(idx: usize, val: u64) -> bool {
+    ((val >> idx) & 0x1) == 0x1
+}

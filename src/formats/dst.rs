@@ -1,9 +1,10 @@
+use pattern::stitch::StitchGroup;
 use std::io::Read;
 use std::iter::FromIterator;
 
 use formats::errors::{Error, ErrorKind, Result};
 use formats::traits::PatternLoader;
-use formats::utils::ReadByteIterator;
+use formats::utils::{is_byte_set, ReadByteIterator};
 use pattern::pattern::{Pattern, PatternAttribute};
 
 pub struct DstPatternLoader {}
@@ -72,7 +73,7 @@ fn read_header_item(
         b"LA" => Ok(ParseResult::Some(PatternAttribute::Title(
             String::from_utf8_lossy(content).trim().to_string(),
         ))),
-        // We can skip these because they're calculated from the stitches .
+        // We can skip these because they're calculated from the stitches.
         b"ST" => Ok(ParseResult::Skip),
         b"CO" => Ok(ParseResult::Skip),
         b"+X" => Ok(ParseResult::Skip),
@@ -121,16 +122,89 @@ fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<Vec<u8
 }
 
 enum StitchInformation {
-    Move(i8),
-    Jump,
-    ColorChange,
+    Move {
+        dx: i8,
+        dy: i8,
+        stop: bool,
+        jump: bool,
+    },
+    End,
+    Invalid,
+}
+
+impl StitchInformation {
+    fn from_bytes(b1: u8, b2: u8, b3: u8) -> StitchInformation {
+        if b1 == 0x00 && b2 == 0x00 && b3 == 0xF3 {
+            return StitchInformation::End;
+        }
+        let bytes: u64 = ((b1 as u64) << 16) | ((b2 as u64) << 8) | ((b3 as u64) << 0);
+        if !is_byte_set(1, bytes) || !is_byte_set(0, bytes) {
+            return StitchInformation::Invalid;
+        }
+        let stop_flag = is_byte_set(6, bytes);
+        let jump_flag = is_byte_set(7, bytes);
+        let dx: i8 = 0;
+        let dy: i8 = 0;
+        dx += if is_byte_set(16, bytes) { 1 } else { 0 };
+        dx += if is_byte_set(17, bytes) { -1 } else { 0 };
+        dx += if is_byte_set(8, bytes) { 3 } else { 0 };
+        dx += if is_byte_set(9, bytes) { -3 } else { 0 };
+        dx += if is_byte_set(18, bytes) { 9 } else { 0 };
+        dx += if is_byte_set(19, bytes) { -9 } else { 0 };
+        dx += if is_byte_set(10, bytes) { 27 } else { 0 };
+        dx += if is_byte_set(11, bytes) { -27 } else { 0 };
+        dx += if is_byte_set(2, bytes) { 81 } else { 0 };
+        dx += if is_byte_set(3, bytes) { -81 } else { 0 };
+
+        dy += if is_byte_set(23, bytes) { 1 } else { 0 };
+        dy += if is_byte_set(22, bytes) { -1 } else { 0 };
+        dy += if is_byte_set(15, bytes) { 3 } else { 0 };
+        dy += if is_byte_set(14, bytes) { -3 } else { 0 };
+        dy += if is_byte_set(21, bytes) { 9 } else { 0 };
+        dy += if is_byte_set(20, bytes) { -9 } else { 0 };
+        dy += if is_byte_set(13, bytes) { 27 } else { 0 };
+        dy += if is_byte_set(12, bytes) { -27 } else { 0 };
+        dy += if is_byte_set(5, bytes) { 81 } else { 0 };
+        dy += if is_byte_set(4, bytes) { -81 } else { 0 };
+
+        return StitchInformation::Move {
+            dx,
+            dy,
+            stop: stop_flag,
+            jump: jump_flag,
+        };
+    }
 }
 
 fn read_stitches(item: &mut Iterator<Item = u8>) {
-    read_stitch(item);
-}
+    let stitches: &mut Vec<StitchGroup> = vec![];
+    let mut current_group: Option<StitchGroup> = None;
+    loop {
+        let stitch_bytes = Vec::from_iter(item.take(3));
+        if stitch_bytes.len() != 3 {
+            // Only reaches here when the iterator hasn't ended correctly(according to the spec).
+            return;
+        }
+        let b1: u8 = stitch_bytes[0];
+        let b2: u8 = stitch_bytes[1];
+        let b3: u8 = stitch_bytes[2];
 
-fn read_stitch() {}
+        let stitch = StitchInformation::from_bytes(b1, b2, b3);
+        match stitch {
+            StitchInformation::Invalid => return,
+            StitchInformation::End => break,
+            StitchInformation::Move {
+                dx,
+                dy,
+                stop: false,
+                jump: false,
+            } => {
+                // Regular stitch
+
+            }
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
