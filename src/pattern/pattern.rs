@@ -1,4 +1,4 @@
-use pattern::stitch::StitchGroup;
+use pattern::stitch::ColorGroup;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PatternAttribute {
@@ -12,5 +12,5 @@ pub enum PatternAttribute {
 pub struct Pattern {
     pub name: String,
     pub attributes: Vec<PatternAttribute>,
-    pub stitch_groups: Vec<StitchGroup>,
+    pub color_groups: Vec<ColorGroup>,
 }

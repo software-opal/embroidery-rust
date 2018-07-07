@@ -35,9 +35,14 @@ impl Stitch {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct ColorGroup {
+    pub thread: Option<Thread>,
+    pub stitch_groups: Vec<StitchGroup>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct StitchGroup {
     pub stitches: Vec<Stitch>,
-    pub thread: Option<Thread>,
     pub trim: bool,
 }
 

@@ -5,11 +5,13 @@ use formats::errors::{Error, ErrorKind, Result};
 use formats::traits::PatternLoader;
 use formats::utils::ReadByteIterator;
 use pattern::pattern::{Pattern, PatternAttribute};
+use pattern::stitch::{ColorGroup, StitchGroup, Stitch};
+use formats::dst::stitch_info::{StitchInformation};
 
 pub struct DstPatternLoader {}
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum ParseResult<T> {
+enum ParseResult<T> {
     Some(T),
     Skip,
     Exhausted,
@@ -30,13 +32,30 @@ impl PatternLoader for DstPatternLoader {
     fn read_pattern(&self, item: &mut Read) -> Result<Pattern> {
         // Read the header
         let mut iter = ReadByteIterator::new(item);
-        read_dst_header(&mut iter)?;
+        let attributes = read_dst_header(&mut iter)?;
+        let color_groups = read_stitches(&mut iter)?;
+        let (title, attributes) = extract_title(attributes);
         return Ok(Pattern {
-            name: "dave".to_owned(),
-            attributes: vec![],
-            stitch_groups: vec![],
+            name: title,
+            attributes: attributes,
+            color_groups: color_groups,
         });
     }
+}
+
+fn extract_title(attrs: Vec<PatternAttribute>) -> (String, Vec<PatternAttribute>) {
+    let mut new_attrs: Vec<PatternAttribute> = Vec::new();
+    let mut title = "Untitled".to_owned();
+    for attr in attrs {
+        if let PatternAttribute::Title(ttl) = attr {
+            title = ttl;
+        } else {
+            new_attrs.push(attr);
+        }
+    };
+    let title_attr = PatternAttribute::Title(title.to_owned());
+    new_attrs.push(title_attr);
+    return (title, new_attrs)
 }
 
 fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribute>> {
@@ -120,21 +139,94 @@ fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<Vec<u8
     }
 }
 
-enum StitchInformation {
-    Move(i8),
-    Jump,
-    ColorChange,
+fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
+    let mut color_groups = Vec::new();
+    let mut stitch_groups = Vec::new();
+    let mut stitches = Vec::new();
+    let mut last_jump:Option<Stitch> = None;
+    loop {
+        match read_stitch(item) {
+            ParseResult::Some(StitchInformation::Move(x, y)) => {
+                if let Some(jump) = last_jump {
+                    last_jump = None;
+                    stitches.push(jump)
+                }
+                stitches.push(Stitch{
+                    x: x as f64,
+                    y: y as f64
+                });
+            },
+            ParseResult::Some(StitchInformation::Jump(x, y)) => {
+                if let Some(stitch) = last_jump {
+                    last_jump = Some(Stitch {
+                        x: (x as f64 + stitch.x),
+                        y: (y as f64 + stitch.y),
+                    });
+                } else {
+                    if stitches.len() > 0 {
+                        let old_stitches = stitches;
+                        stitches = Vec::new();
+                        stitch_groups.push(StitchGroup{
+                            stitches: old_stitches,
+                            trim: true,
+                        });
+                    }
+                    last_jump = Some(Stitch {
+                        x: x as f64,
+                        y: y as f64,
+                    });
+                }
+            },
+            ParseResult::Some(StitchInformation::ColorChange(x, y)) => {
+                if let Some(stitch) = last_jump {
+                    last_jump = Some(Stitch {
+                        x: (x as f64 + stitch.x),
+                        y: (y as f64 + stitch.y),
+                    });
+                } else {
+                    if stitches.len() > 0 {
+                        let old_stitches = stitches;
+                        stitches = Vec::new();
+                        stitch_groups.push(StitchGroup{
+                            stitches: old_stitches,
+                            trim: true,
+                        });
+                    }
+                    if stitch_groups.len() > 0 {
+                        let old_stitch_groups = stitch_groups;
+                        stitch_groups = Vec::new();
+                        color_groups.push(ColorGroup {
+                            stitch_groups: old_stitch_groups,
+                            thread: None,
+                        });
+                    }
+                    last_jump = Some(Stitch {
+                        x: x as f64,
+                        y: y as f64,
+                    });
+                }
+            },
+            ParseResult::Some(StitchInformation::End) => {break;},
+            ParseResult::Exhausted => {break;},
+            ParseResult::Skip => {},
+        }
+    }
+    return Ok(color_groups)
 }
 
-fn read_stitches(item: &mut Iterator<Item = u8>) {
-    read_stitch(item);
+fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformation> {
+    let header_bytes = Vec::from_iter(in_bytes.take(3));
+    let items = header_bytes.as_slice();
+    if items.len() < 3 {
+        ParseResult::Exhausted
+    } else {
+        ParseResult::Some(StitchInformation::from_bytes([items[0], items[1], items[2]]))
+    }
 }
-
-fn read_stitch() {}
 
 #[cfg(test)]
 mod tests {
-    use formats::dst::*;
+    use super::*;
 
     macro_rules! to_u8_iter {
         ($t:expr) => {
@@ -192,12 +284,8 @@ mod tests {
     #[test]
     fn test_read_dst_header() {
         // Taken from `tests/dst/crown.dst`
-        let BASIC_HEADER_SAMPLE = b"\
-LA:crown FS 40     \rST:   4562\rCO:  7\r+X:  362\r\
--X:  357\r+Y:  240\r-Y:  267\rAX:+   15\rAY:-   24\r\
-MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
 
-        let result = read_dst_header(to_u8_iter!(HEADER_SAMPLE)).unwrap();
+        let result = read_dst_header(to_u8_iter!(BASIC_HEADER_SAMPLE)).unwrap();
         let mut iter = result.iter();
         assert_eq!(
             iter.next(),
@@ -208,4 +296,8 @@ MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
         assert_eq!(iter.next(), None);
     }
 
+    const BASIC_HEADER_SAMPLE: &[u8] = b"\
+LA:crown FS 40     \rST:   4562\rCO:  7\r+X:  362\r\
+-X:  357\r+Y:  240\r-Y:  267\rAX:+   15\rAY:-   24\r\
+MX:+    0\rMY:+    0\rPD:******\r\x1a                ";
 }
