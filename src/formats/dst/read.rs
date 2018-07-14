@@ -1,12 +1,12 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
+use formats::dst::stitch_info::StitchInformation;
 use formats::errors::{Error, ErrorKind, Result};
 use formats::traits::PatternLoader;
 use formats::utils::ReadByteIterator;
 use pattern::pattern::{Pattern, PatternAttribute};
-use pattern::stitch::{ColorGroup, StitchGroup, Stitch};
-use formats::dst::stitch_info::{StitchInformation};
+use pattern::stitch::{ColorGroup, Stitch, StitchGroup};
 
 pub struct DstPatternLoader {}
 
@@ -52,10 +52,10 @@ fn extract_title(attrs: Vec<PatternAttribute>) -> (String, Vec<PatternAttribute>
         } else {
             new_attrs.push(attr);
         }
-    };
+    }
     let title_attr = PatternAttribute::Title(title.to_owned());
     new_attrs.push(title_attr);
-    return (title, new_attrs)
+    return (title, new_attrs);
 }
 
 fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribute>> {
@@ -91,7 +91,7 @@ fn read_header_item(
         b"LA" => Ok(ParseResult::Some(PatternAttribute::Title(
             String::from_utf8_lossy(content).trim().to_string(),
         ))),
-        // We can skip these because they're calculated from the stitches .
+        // We can skip these because they're calculated from the stitches.
         b"ST" => Ok(ParseResult::Skip),
         b"CO" => Ok(ParseResult::Skip),
         b"+X" => Ok(ParseResult::Skip),
@@ -154,7 +154,10 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                 if !last_was_regular && stitch_type.is_regular() {
                     // First stitch after a series of jumps should be the location where the
                     // jumps ended up.
-                    stitches.push(Stitch{x: cx as f64, y: cy as f64});
+                    stitches.push(Stitch {
+                        x: cx as f64,
+                        y: cy as f64,
+                    });
                     last_was_regular = true;
                 }
                 cx = cx + x as i32;
@@ -162,20 +165,19 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                 println!("({}, {})", cx, cy);
 
                 if stitch_type.is_regular() {
-                    stitches.push(Stitch{
+                    stitches.push(Stitch {
                         x: cx as f64,
-                        y: cy as f64
+                        y: cy as f64,
                     });
                 } else {
                     last_was_regular = false;
                     if stitches.len() > 0 {
                         let old_stitches = stitches;
                         stitches = Vec::new();
-                        stitch_groups.push(StitchGroup{
+                        stitch_groups.push(StitchGroup {
                             stitches: old_stitches,
                             trim: true,
                         });
-
                     }
                     if stitch_type.is_stop() && stitch_groups.len() > 0 {
                         let old_stitch_groups = stitch_groups;
@@ -186,14 +188,18 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                         });
                     }
                 }
-            },
-            ParseResult::Some(StitchInformation::End) => {break;},
-            ParseResult::Exhausted => {break;},
-            ParseResult::Skip => {},
+            }
+            ParseResult::Some(StitchInformation::End) => {
+                break;
+            }
+            ParseResult::Exhausted => {
+                break;
+            }
+            ParseResult::Skip => {}
         }
     }
     if stitches.len() > 0 {
-        stitch_groups.push(StitchGroup{
+        stitch_groups.push(StitchGroup {
             stitches: stitches,
             trim: true,
         });
@@ -204,7 +210,7 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
             thread: None,
         });
     }
-    return Ok(color_groups)
+    return Ok(color_groups);
 }
 
 fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformation> {
@@ -214,7 +220,9 @@ fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformat
         ParseResult::Exhausted
     } else {
         print!("{:08b} {:08b} {:08b} -> ", items[0], items[1], items[2]);
-        ParseResult::Some(StitchInformation::from_bytes([items[0], items[1], items[2]]))
+        ParseResult::Some(StitchInformation::from_bytes([
+            items[0], items[1], items[2],
+        ]))
     }
 }
 
