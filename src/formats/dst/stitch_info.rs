@@ -90,42 +90,80 @@ stitch_definitions!(
     0x_01_00_00 -> (x + 1)
 );
 
+#[derive(Debug, PartialEq)]
+pub enum StitchType {
+    Regular,
+    Jump,
+    Stop,
+    JumpStop,
+}
+
+impl StitchType {
+    pub fn from_bytes(bytes: [u8; 3]) -> Self {
+        match bytes[2] & 0b1100_0000 {
+            0b0100_0000 => StitchType::Stop,
+            0b1000_0000 => StitchType::Jump,
+            0b1100_0000 => StitchType::JumpStop,
+            _ => StitchType::Regular,
+        }
+    }
+
+    pub fn is_jump(&self) -> bool {
+        match self {
+            StitchType::Stop => false,
+            StitchType::Jump => true,
+            StitchType::JumpStop => true,
+            StitchType::Regular => false,
+        }
+    }
+    pub fn is_stop(&self) -> bool {
+        match self {
+            StitchType::Stop => true,
+            StitchType::Jump => false,
+            StitchType::JumpStop => true,
+            StitchType::Regular => false,
+        }
+    }
+    pub fn is_regular(&self) -> bool {
+        return !self.is_jump() && !self.is_stop();
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum StitchInformation {
-    Move(i8, i8),
-    Jump(i8, i8),
-    ColorChange(i8, i8),
+    Move(i8, i8, StitchType),
     End,
 }
 
 impl StitchInformation {
     pub fn from_bytes(bytes: [u8; 3]) -> Self {
-        let val: u32 = bytes[2] as u32;
+        let val: u32 = bytes[0] as u32;
         let val: u32 = (bytes[1] as u32) | (val << 8);
+        let val: u32 = (bytes[2] as u32) | (val << 8);
         let (x, y) = from_int(val);
-        if val & 0x_00_00_80 == 0x_00_00_80 {
-            return StitchInformation::Jump(x, y);
-        } else if val & 0x_00_00_40 == 0x_00_00_40 {
-            return StitchInformation::ColorChange(x, y);
-        } else if val == 0x_00_00_F3 {
-            return StitchInformation::End;
+        if val & 0x_00_00_F0 == 0x_00_00_F0 {
+            StitchInformation::End
         } else {
-            return StitchInformation::Move(x, y);
+            StitchInformation::Move(x, y, StitchType::from_bytes(bytes))
         }
     }
-    pub fn to_bytes(us: Self) -> Option<u32> {
-        let matched = match us {
-            StitchInformation::Move(x, y) => to_int(x, y),
-            StitchInformation::Jump(x, y) => to_int(x, y),
-            StitchInformation::ColorChange(x, y) => to_int(x, y),
-            StitchInformation::End => Some(0x00_00_F3),
-        };
-        match matched {
-            None => None,
-            Some(bytes) => match us {
-                StitchInformation::Jump(_, _) => Some(bytes | 0x00_00_80),
-                StitchInformation::ColorChange(_, _) => Some(bytes | 0x00_00_40),
-                _ => Some(bytes),
-            },
+    pub fn to_bytes(us: Self) -> Option<[u8; 3]> {
+        match us {
+            StitchInformation::Move(x, y, stitch_type) => {
+                let val = to_int(x, y)?;
+                let option_bits = match stitch_type {
+                    StitchType::Jump => 0x80,
+                    StitchType::Stop => 0x40,
+                    StitchType::JumpStop => 0xC0,
+                    StitchType::Regular => 0x00,
+                };
+                return Some([
+                    ((val >> 16) & 0xFF) as u8,
+                    ((val >> 8) & 0xFF) as u8,
+                    option_bits | (val & 0xFF) as u8,
+                ]);
+            }
+            StitchInformation::End => return Some([0x00, 0x00, 0xF3]),
         }
     }
 }
@@ -170,5 +208,25 @@ mod tests {
                 )
             }
         }
+    }
+
+    #[test]
+    fn test_stitch_information__from_bytes() {
+        assert_eq!(
+            StitchInformation::from_bytes([0x00, 0x00, 0x83]),
+            StitchInformation::Move(0, 0, StitchType::Jump),
+        );
+        assert_eq!(
+            StitchInformation::from_bytes([0x00, 0x00, 0x43]),
+            StitchInformation::Move(0, 0, StitchType::Stop),
+        );
+        assert_eq!(
+            StitchInformation::from_bytes([0x00, 0x00, 0xC3]),
+            StitchInformation::Move(0, 0, StitchType::JumpStop),
+        );
+        assert_eq!(
+            StitchInformation::from_bytes([0x00, 0x00, 0xF3]),
+            StitchInformation::End,
+        );
     }
 }

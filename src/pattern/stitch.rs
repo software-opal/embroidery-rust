@@ -46,8 +46,6 @@ pub struct StitchGroup {
     pub trim: bool,
 }
 
-impl StitchGroup {}
-
 #[cfg(test)]
 mod tests {
     use pattern::stitch::Stitch;

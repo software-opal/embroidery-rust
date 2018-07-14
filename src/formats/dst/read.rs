@@ -143,26 +143,31 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
     let mut color_groups = Vec::new();
     let mut stitch_groups = Vec::new();
     let mut stitches = Vec::new();
-    let mut last_jump:Option<Stitch> = None;
+    let mut last_was_regular = false;
+    let mut cx: i32 = 0;
+    let mut cy: i32 = 0;
     loop {
-        match read_stitch(item) {
-            ParseResult::Some(StitchInformation::Move(x, y)) => {
-                if let Some(jump) = last_jump {
-                    last_jump = None;
-                    stitches.push(jump)
+        let s = read_stitch(item);
+        print!("{:?} -> ", s);
+        match s {
+            ParseResult::Some(StitchInformation::Move(x, y, stitch_type)) => {
+                if !last_was_regular && stitch_type.is_regular() {
+                    // First stitch after a series of jumps should be the location where the
+                    // jumps ended up.
+                    stitches.push(Stitch{x: cx as f64, y: cy as f64});
+                    last_was_regular = true;
                 }
-                stitches.push(Stitch{
-                    x: x as f64,
-                    y: y as f64
-                });
-            },
-            ParseResult::Some(StitchInformation::Jump(x, y)) => {
-                if let Some(stitch) = last_jump {
-                    last_jump = Some(Stitch {
-                        x: (x as f64 + stitch.x),
-                        y: (y as f64 + stitch.y),
+                cx = cx + x as i32;
+                cy = cy + y as i32;
+                println!("({}, {})", cx, cy);
+
+                if stitch_type.is_regular() {
+                    stitches.push(Stitch{
+                        x: cx as f64,
+                        y: cy as f64
                     });
                 } else {
+                    last_was_regular = false;
                     if stitches.len() > 0 {
                         let old_stitches = stitches;
                         stitches = Vec::new();
@@ -170,29 +175,9 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                             stitches: old_stitches,
                             trim: true,
                         });
+
                     }
-                    last_jump = Some(Stitch {
-                        x: x as f64,
-                        y: y as f64,
-                    });
-                }
-            },
-            ParseResult::Some(StitchInformation::ColorChange(x, y)) => {
-                if let Some(stitch) = last_jump {
-                    last_jump = Some(Stitch {
-                        x: (x as f64 + stitch.x),
-                        y: (y as f64 + stitch.y),
-                    });
-                } else {
-                    if stitches.len() > 0 {
-                        let old_stitches = stitches;
-                        stitches = Vec::new();
-                        stitch_groups.push(StitchGroup{
-                            stitches: old_stitches,
-                            trim: true,
-                        });
-                    }
-                    if stitch_groups.len() > 0 {
+                    if stitch_type.is_stop() && stitch_groups.len() > 0 {
                         let old_stitch_groups = stitch_groups;
                         stitch_groups = Vec::new();
                         color_groups.push(ColorGroup {
@@ -200,16 +185,24 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                             thread: None,
                         });
                     }
-                    last_jump = Some(Stitch {
-                        x: x as f64,
-                        y: y as f64,
-                    });
                 }
             },
             ParseResult::Some(StitchInformation::End) => {break;},
             ParseResult::Exhausted => {break;},
             ParseResult::Skip => {},
         }
+    }
+    if stitches.len() > 0 {
+        stitch_groups.push(StitchGroup{
+            stitches: stitches,
+            trim: true,
+        });
+    }
+    if stitch_groups.len() > 0 {
+        color_groups.push(ColorGroup {
+            stitch_groups: stitch_groups,
+            thread: None,
+        });
     }
     return Ok(color_groups)
 }
@@ -220,6 +213,7 @@ fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformat
     if items.len() < 3 {
         ParseResult::Exhausted
     } else {
+        print!("{:08b} {:08b} {:08b} -> ", items[0], items[1], items[2]);
         ParseResult::Some(StitchInformation::from_bytes([items[0], items[1], items[2]]))
     }
 }
