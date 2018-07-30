@@ -40,10 +40,22 @@ pub struct ColorGroup {
     pub stitch_groups: Vec<StitchGroup>,
 }
 
+impl ColorGroup {
+    pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
+        self.stitch_groups.iter().flat_map(|g| g.iter_stitches())
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct StitchGroup {
     pub stitches: Vec<Stitch>,
     pub trim: bool,
+}
+
+impl StitchGroup {
+    pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
+        self.stitches.iter()
+    }
 }
 
 #[cfg(test)]
