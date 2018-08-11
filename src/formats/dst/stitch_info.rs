@@ -110,18 +110,18 @@ impl StitchType {
 
     pub fn is_jump(&self) -> bool {
         match self {
-            StitchType::Stop => false,
-            StitchType::Jump => true,
-            StitchType::JumpStop => true,
-            StitchType::Regular => false,
+            &StitchType::Stop => false,
+            &StitchType::Jump => true,
+            &StitchType::JumpStop => true,
+            &StitchType::Regular => false,
         }
     }
     pub fn is_stop(&self) -> bool {
         match self {
-            StitchType::Stop => true,
-            StitchType::Jump => false,
-            StitchType::JumpStop => true,
-            StitchType::Regular => false,
+            &StitchType::Stop => true,
+            &StitchType::Jump => false,
+            &StitchType::JumpStop => true,
+            &StitchType::Regular => false,
         }
     }
     pub fn is_regular(&self) -> bool {
