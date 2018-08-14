@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::io::Write;
 
 use formats::errors::Result;
 use pattern::pattern::Pattern;
@@ -13,4 +14,9 @@ pub trait PatternLoader {
 
     /// Read the pattern from the file and return it.
     fn read_pattern(&self, item: &mut Read) -> Result<Pattern>;
+}
+
+pub trait PatternWriter {
+    /// Write a pattern to a file
+    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<()>;
 }

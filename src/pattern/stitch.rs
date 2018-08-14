@@ -12,6 +12,7 @@ A stitch represents the x,y coordinates in millimeters.
 
 use pattern::thread::Thread;
 
+/// Represents mm from an arbitary (0, 0) where positive values move up and right
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stitch {
     pub x: f64,

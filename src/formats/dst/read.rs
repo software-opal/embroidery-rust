@@ -148,7 +148,6 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
     let mut cy: i32 = 0;
     loop {
         let s = read_stitch(item);
-        print!("{:?} -> ", s);
         match s {
             ParseResult::Some(StitchInformation::Move(x, y, stitch_type)) => {
                 if !last_was_regular && stitch_type.is_regular() {
@@ -162,7 +161,6 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
                 }
                 cx = cx + x as i32;
                 cy = cy + y as i32;
-                println!("({}, {})", cx, cy);
 
                 if stitch_type.is_regular() {
                     stitches.push(Stitch {
@@ -219,7 +217,6 @@ fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformat
     if items.len() < 3 {
         ParseResult::Exhausted
     } else {
-        print!("{:08b} {:08b} {:08b} -> ", items[0], items[1], items[2]);
         ParseResult::Some(StitchInformation::from_bytes([
             items[0], items[1], items[2],
         ]))
