@@ -1,9 +1,9 @@
-use pattern::stitch::ColorGroup;
-use pattern::stitch::Stitch;
+use crate::pattern::stitch::ColorGroup;
+use crate::pattern::stitch::Stitch;
 use std::f64;
 use std::iter::Iterator;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PatternAttribute {
     Arbitary(String, String),
     Title(String),

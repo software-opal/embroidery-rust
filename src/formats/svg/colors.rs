@@ -1,6 +1,5 @@
-use pattern::Color;
+use crate::pattern::Color;
 use svgtypes;
-pub type SvgColor = svgtypes::Color;
 
 impl<'a> From<&'a Color> for svgtypes::Color {
     fn from(color: &Color) -> svgtypes::Color {

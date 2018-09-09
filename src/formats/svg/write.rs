@@ -1,14 +1,22 @@
-use formats::errors::Result;
-use formats::traits::PatternWriter;
-use palette::{Lch, Srgb};
-use pattern::{Color, Pattern};
 use std::io::Write;
+
+use palette::{Lch, Srgb};
 use svgtypes::{PathBuilder, WriteBuffer, WriteOptions};
+
+use crate::format::errors::WriteResult as Result;
+use crate::format::traits::PatternWriter;
+use crate::pattern::{Color, Pattern};
 
 const LINE_WIDTH: f64 = 1.8;
 const STITCH_DIAMETER: f64 = 2.3;
 
 pub struct SvgPatternWriter {}
+
+impl Default for SvgPatternWriter {
+    fn default() -> Self {
+        SvgPatternWriter {}
+    }
+}
 
 impl PatternWriter for SvgPatternWriter {
     fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<()> {
@@ -39,9 +47,15 @@ fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
     writeln!(writer, " image-rendering='optimizeQuality'")?;
     writeln!(writer, " width=\"{}mm\"", width + 20.)?;
     writeln!(writer, " height=\"{}mm\"", height + 20.)?;
-    writeln!(writer, " viewBox=\"{} {} {} {}\"", minx - 10., -10., width + 20., height + 20.)?;
+    writeln!(
+        writer,
+        " viewBox=\"{} {} {} {}\"",
+        minx - 10.,
+        -10.,
+        width + 20.,
+        height + 20.
+    )?;
     writeln!(writer, ">")?;
-
 
     // TODO: Write out metadata
     // writeln!(writer, "  <metadata>")?;

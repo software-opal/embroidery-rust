@@ -9,18 +9,14 @@ macro_rules! expand_from_delta {
 
 macro_rules! expand_to_condition {
     ($x:ident, $y:ident,y, $sign:tt, $val:tt: $block:block) => {
-        println!("  y={}, {}", $y, stringify!($sign:tt, $val:tt: $block:block));
         if (0 $sign $y) >= (($val - 1) / 2 + 1) {
             $block;
-            println!(">>y={}, {}", $y, stringify!($sign:tt, $val:tt: $block:block));
             $y = $y - (0 $sign $val);
         }
     };
     ($x:ident, $y:ident,x, $sign:tt, $val:tt: $block:block) => {
-        println!("  x={}, {}", $x, stringify!($sign:tt, $val:tt: $block:block));
         if (0 $sign $x) >= (($val - 1) / 2 + 1) {
             $block;
-            println!(">>x={}, {}", $x, stringify!($sign:tt, $val:tt: $block:block));
             $x = $x - (0 $sign $val);
         }
     };
@@ -49,7 +45,6 @@ macro_rules! stitch_definitions {
             let mut y = _y;
             let mut bytes: u32 = 0_00_00_03;
             $(
-                println!("{}, {}", x, y);
                 expand_to_condition!(x, y, $var, $sign, $val: {
                     bytes |= $bits;
                 });
@@ -90,7 +85,7 @@ stitch_definitions!(
     0x_01_00_00 -> (x + 1)
 );
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum StitchType {
     Regular,
     Jump,
@@ -105,6 +100,22 @@ impl StitchType {
             0b1000_0000 => StitchType::Jump,
             0b1100_0000 => StitchType::JumpStop,
             _ => StitchType::Regular,
+        }
+    }
+    pub fn with_stop(&self) -> Self {
+        match self {
+            &StitchType::Stop => StitchType::Stop,
+            &StitchType::Jump => StitchType::JumpStop,
+            &StitchType::JumpStop => StitchType::JumpStop,
+            &StitchType::Regular => StitchType::Stop,
+        }
+    }
+    pub fn with_jump(&self) -> Self {
+        match self {
+            &StitchType::Stop => StitchType::JumpStop,
+            &StitchType::Jump => StitchType::Jump,
+            &StitchType::JumpStop => StitchType::JumpStop,
+            &StitchType::Regular => StitchType::Jump,
         }
     }
 
@@ -129,7 +140,7 @@ impl StitchType {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum StitchInformation {
     Move(i8, i8, StitchType),
     End,
@@ -147,8 +158,8 @@ impl StitchInformation {
             StitchInformation::Move(x, y, StitchType::from_bytes(bytes))
         }
     }
-    pub fn to_bytes(us: Self) -> Option<[u8; 3]> {
-        match us {
+    pub fn to_bytes(self: Self) -> Option<[u8; 3]> {
+        match self {
             StitchInformation::Move(x, y, stitch_type) => {
                 let val = to_int(x, y)?;
                 let option_bits = match stitch_type {
@@ -191,27 +202,48 @@ mod tests {
     }
 
     #[test]
+    fn test_macro_any_byte_sequence_parses() {
+        for i in 0..0x1_00_00_00 {
+            let (x, y) = from_int(i);
+            assert!(
+                x >= -121 && x <= 121 && y >= -121 && y <= 121,
+                "{:06X} -> ({}, {})",
+                i,
+                x,
+                y,
+            )
+        }
+    }
+
+    #[test]
     fn test_macro_gen_valids_roundtrip() {
-        for x in -121..121 {
-            for y in -121..121 {
+        for x in -121..122 {
+            for y in -121..122 {
                 let test_val = to_int(x, y).unwrap();
                 let (test_x, test_y) = from_int(test_val);
+                let test2_val = to_int(test_x, test_y).unwrap();
                 assert_eq!(
                     (test_x, test_y),
                     (x, y),
-                    "({}, {}) -> {:06X} -> ({}, {})",
+                    "({}, {}) -> {:06X} -> ({}, {}) -> {:06X}",
                     x,
                     y,
                     test_val,
                     test_x,
-                    test_y
-                )
+                    test_y,
+                    test2_val
+                );
+                assert_eq!(
+                    test_val, test2_val,
+                    "({}, {}) -> {:06X} -> ({}, {}) -> {:06X}",
+                    x, y, test_val, test_x, test_y, test2_val
+                );
             }
         }
     }
 
     #[test]
-    fn test_stitch_information__from_bytes() {
+    fn test_stitch_information_from_bytes() {
         assert_eq!(
             StitchInformation::from_bytes([0x00, 0x00, 0x83]),
             StitchInformation::Move(0, 0, StitchType::Jump),

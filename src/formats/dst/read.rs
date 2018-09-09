@@ -1,20 +1,29 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
-use formats::dst::stitch_info::StitchInformation;
-use formats::errors::{Error, ErrorKind, Result};
-use formats::traits::PatternLoader;
-use formats::utils::ReadByteIterator;
-use pattern::pattern::{Pattern, PatternAttribute};
-use pattern::stitch::{ColorGroup, Stitch, StitchGroup};
+use crate::format::errors::{ReadError, ReadResult as Result};
+use crate::format::traits::PatternLoader;
+use crate::format::utils::ReadByteIterator;
+use crate::pattern::pattern::{Pattern, PatternAttribute};
+use crate::pattern::stitch::{ColorGroup, Stitch, StitchGroup};
+use crate::utils::c_trim;
+
+use crate::formats::dst::stitch_info::StitchInformation;
+use crate::formats::dst::stitch_info::StitchType;
 
 pub struct DstPatternLoader {}
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 enum ParseResult<T> {
     Some(T),
     Skip,
     Exhausted,
+}
+
+impl Default for DstPatternLoader {
+    fn default() -> Self {
+        DstPatternLoader {}
+    }
 }
 
 impl PatternLoader for DstPatternLoader {
@@ -23,7 +32,7 @@ impl PatternLoader for DstPatternLoader {
         // Check the last byte of the file? maybe
         let mut iter = ReadByteIterator::new(item);
         return match read_dst_header(&mut iter) {
-            Err(Error(ErrorKind::InvalidFormatError(_), _)) => Ok(false),
+            Err(ReadError::InvalidFormatError(_)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
         };
@@ -87,10 +96,21 @@ fn read_header_item(
         ParseResult::Skip => return Ok(ParseResult::Skip),
         ParseResult::Exhausted => return Ok(ParseResult::Exhausted),
     };
+    debug!(
+        "Read DST Header: {:?}:{:?}",
+        String::from_utf8_lossy(header).to_string(),
+        String::from_utf8_lossy(content).to_string()
+    );
     match header {
-        b"LA" => Ok(ParseResult::Some(PatternAttribute::Title(
-            String::from_utf8_lossy(content).trim().to_string(),
-        ))),
+        b"LA" => Ok(ParseResult::Some(PatternAttribute::Title(c_trim(
+            &String::from_utf8_lossy(content),
+        )))),
+        b"AU" => Ok(ParseResult::Some(PatternAttribute::Author(c_trim(
+            &String::from_utf8_lossy(content),
+        )))),
+        b"CP" => Ok(ParseResult::Some(PatternAttribute::Copyright(c_trim(
+            &String::from_utf8_lossy(content),
+        )))),
         // We can skip these because they're calculated from the stitches.
         b"ST" => Ok(ParseResult::Skip),
         b"CO" => Ok(ParseResult::Skip),
@@ -98,6 +118,7 @@ fn read_header_item(
         b"+Y" => Ok(ParseResult::Skip),
         b"-X" => Ok(ParseResult::Skip),
         b"-Y" => Ok(ParseResult::Skip),
+        // We can skip these because they're all related to multi-file patterns, which we don't support
         b"AX" => Ok(ParseResult::Skip),
         b"AY" => Ok(ParseResult::Skip),
         b"MX" => Ok(ParseResult::Skip),
@@ -143,48 +164,59 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
     let mut color_groups = Vec::new();
     let mut stitch_groups = Vec::new();
     let mut stitches = Vec::new();
-    let mut last_was_regular = false;
+    let mut last_irregulars: Vec<(i32, i32, StitchType)> = Vec::new();
     let mut cx: i32 = 0;
     let mut cy: i32 = 0;
     loop {
         let s = read_stitch(item);
         match s {
             ParseResult::Some(StitchInformation::Move(x, y, stitch_type)) => {
-                if !last_was_regular && stitch_type.is_regular() {
+                if !last_irregulars.is_empty() && stitch_type.is_regular() {
+                    debug!("Last Stitch: {:?}", stitches.last());
+                    if !stitches.is_empty() {
+                        let old_stitches = stitches;
+                        stitches = Vec::new();
+                        stitch_groups.push(StitchGroup {
+                            stitches: old_stitches,
+                            trim: true,
+                            cut: determine_cut(&last_irregulars),
+                        });
+                        debug!("Last cut: {}", stitch_groups[0].cut)
+                    }
+                    if !stitch_groups.is_empty() {
+                        if last_irregulars.iter().any(|&(_, _, ref st)| st.is_stop()) {
+                            let old_stitch_groups = stitch_groups;
+                            stitch_groups = Vec::new();
+                            color_groups.push(ColorGroup {
+                                stitch_groups: old_stitch_groups,
+                                // TODO: threads
+                                thread: None,
+                            });
+                        }
+                    }
+                    last_irregulars = Vec::new();
                     // First stitch after a series of jumps should be the location where the
                     // jumps ended up.
                     stitches.push(Stitch {
-                        x: cx as f64,
-                        y: cy as f64,
+                        x: cx as f64 / 10.,
+                        y: cy as f64 / 10.,
                     });
-                    last_was_regular = true;
+                }
+                if !stitch_type.is_regular() && last_irregulars.is_empty() {
+                    debug!("Last Regular ({:?},{:?}). Delta: {},{}", cx, cy, x, y);
+                    last_irregulars.push((cx, cy, StitchType::Regular));
                 }
                 cx = cx + x as i32;
                 cy = cy + y as i32;
 
                 if stitch_type.is_regular() {
                     stitches.push(Stitch {
-                        x: cx as f64,
-                        y: cy as f64,
+                        x: cx as f64 / 10.,
+                        y: cy as f64 / 10.,
                     });
                 } else {
-                    last_was_regular = false;
-                    if stitches.len() > 0 {
-                        let old_stitches = stitches;
-                        stitches = Vec::new();
-                        stitch_groups.push(StitchGroup {
-                            stitches: old_stitches,
-                            trim: true,
-                        });
-                    }
-                    if stitch_type.is_stop() && stitch_groups.len() > 0 {
-                        let old_stitch_groups = stitch_groups;
-                        stitch_groups = Vec::new();
-                        color_groups.push(ColorGroup {
-                            stitch_groups: old_stitch_groups,
-                            thread: None,
-                        });
-                    }
+                    debug!("Irregular {:?} {:?} {:?}", cx, cy, stitch_type);
+                    last_irregulars.push((cx, cy, stitch_type));
                 }
             }
             ParseResult::Some(StitchInformation::End) => {
@@ -200,6 +232,7 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>> {
         stitch_groups.push(StitchGroup {
             stitches: stitches,
             trim: true,
+            cut: determine_cut(&last_irregulars),
         });
     }
     if stitch_groups.len() > 0 {
@@ -221,6 +254,25 @@ fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformat
             items[0], items[1], items[2],
         ]))
     }
+}
+
+fn determine_cut(stitches: &Vec<(i32, i32, StitchType)>) -> bool {
+    debug!("determine_cut {} {:?}", stitches.len(), stitches);
+    for i in 0..(stitches.len()) {
+        debug!("Checking for moves {}: {:?}", i, stitches.iter().nth(i));
+        let mut st = stitches.iter();
+        let (fx, fy, _) = if let Some(x) = st.nth(i) {
+            x
+        } else {
+            return false;
+        };
+        for &(cx, cy, _) in st {
+            if (fx - 1 <= cx && cx <= fx + 1) && (fy - 1 <= cy && cy <= fy + 1) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 #[cfg(test)]

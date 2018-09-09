@@ -1,7 +1,8 @@
-use embroidery_rust::formats::dst::DstPatternLoader;
-use embroidery_rust::formats::traits::PatternLoader;
+use embroidery_rust::format::traits::PatternLoader;
 use embroidery_rust::pattern::PatternAttribute;
 use embroidery_rust::pattern::Stitch;
+
+use embroidery_rust::formats::dst::DstPatternLoader;
 
 #[test]
 fn test_file_load() {
@@ -24,15 +25,9 @@ fn test_file_load() {
         assert_eq!(sg0.trim, true);
         assert_eq!(sg0.stitches.len(), 1275);
         assert_eq!(sg0.stitches[0], Stitch { x: 0., y: 0. });
-        assert_eq!(sg0.stitches[1], Stitch { x: 23., y: 8. });
-        assert_eq!(sg0.stitches[2], Stitch { x: 43., y: 8. });
-        assert_eq!(
-            sg0.stitches[1274],
-            Stitch {
-                x: -143.0,
-                y: -60.0
-            }
-        );
+        assert_eq!(sg0.stitches[1], Stitch { x: 2.3, y: 0.8 });
+        assert_eq!(sg0.stitches[2], Stitch { x: 4.3, y: 0.8 });
+        assert_eq!(sg0.stitches[1274], Stitch { x: -14.3, y: -6.0 });
     }
     {
         let cg1 = &pattern.color_groups[1];
@@ -41,17 +36,10 @@ fn test_file_load() {
         let sg1 = &cg1.stitch_groups[0];
         assert_eq!(sg1.trim, true);
         assert_eq!(sg1.stitches.len(), 944);
-        assert_eq!(
-            sg1.stitches[0],
-            Stitch {
-                x: -143.0,
-                y: -60.0
-            }
-        );
+        assert_eq!(sg1.stitches[0], Stitch { x: -14.3, y: -6.0 });
     }
     {
         let cg2 = &pattern.color_groups[2];
-        println!("{:?}", cg2);
         assert_eq!(cg2.thread, None);
         assert_eq!(cg2.stitch_groups.len(), 2);
         let sg2_0 = &cg2.stitch_groups[0];
