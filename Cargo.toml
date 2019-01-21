@@ -2,6 +2,7 @@
 name = "embroidery-rust"
 version = "0.1.0"
 authors = ["Lee Symes <leesdolphin@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 euclid = "^0.18.2"
@@ -10,12 +11,7 @@ log = "^0.4"
 palette = "^0.4.1"
 svgtypes = "^0.1.1"
 unicode-segmentation = "^1.2"
+byteorder = "1"
+
 # Only for main.rs
 simplelog = "^0.5.0"
-
-
-[profile.debug]
-panic = "abort"
-
-[profile.release]
-panic = "abort"

@@ -105,14 +105,16 @@ fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>> {
         .filter_map(|attr| match attr {
             PatternAttribute::Author(title) => Some(title.to_owned()),
             _ => None,
-        }).next();
+        })
+        .next();
     let copyright = pattern
         .attributes
         .iter()
         .filter_map(|attr| match attr {
             PatternAttribute::Copyright(title) => Some(title.to_owned()),
             _ => None,
-        }).next();
+        })
+        .next();
 
     if let Some(a) = author {
         write!(data, "AU:{: <17}\r", char_truncate(&c_trim(&a), 17))?;

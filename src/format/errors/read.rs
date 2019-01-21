@@ -1,6 +1,6 @@
 use std::result;
 
-use super::std::StdError;
+use super::StdError;
 
 #[derive(Fail, Debug)]
 pub enum ReadError {
@@ -10,7 +10,7 @@ pub enum ReadError {
     Std(#[cause] StdError),
 }
 
-impl <T: Into<StdError>> From<T> for ReadError {
+impl<T: Into<StdError>> From<T> for ReadError {
     fn from(err: T) -> Self {
         ReadError::Std(err.into())
     }

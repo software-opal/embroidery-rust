@@ -1,11 +1,31 @@
+pub use self::read::{ReadError, ReadResult};
+pub use self::write::{WriteError, WriteResult};
+use std::fmt;
+use std::io;
+use std::result;
+
 pub mod read;
-pub mod std;
 pub mod write;
 
-pub use self::read::{ReadError, ReadResult};
-pub use self::std::StdError;
-pub use self::write::{WriteError, WriteResult};
-use std::result;
+#[derive(Debug, Fail)]
+pub enum StdError {
+    #[fail(display = "{}", _0)]
+    Io(#[cause] io::Error),
+    #[fail(display = "{}", _0)]
+    Fmt(#[cause] fmt::Error),
+}
+
+impl From<io::Error> for StdError {
+    fn from(err: io::Error) -> Self {
+        StdError::Io(err)
+    }
+}
+
+impl From<fmt::Error> for StdError {
+    fn from(err: fmt::Error) -> Self {
+        StdError::Fmt(err)
+    }
+}
 
 #[derive(Fail, Debug)]
 pub enum Error {

@@ -1,6 +1,6 @@
 use std::result;
 
-use super::std::StdError;
+use super::StdError;
 use crate::pattern::stitch::Stitch;
 
 #[derive(Fail, Debug)]
