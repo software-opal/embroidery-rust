@@ -1,11 +1,11 @@
-use super::header::VipHeader;
-use embroidery_lib::format::errors::{ReadError, ReadResult};
-use embroidery_lib::format::traits::PatternLoader;
-use crate::formats::vip::consts::VIP_DECODING_TABLE;
-use embroidery_lib::pattern::colors::Color;
-use embroidery_lib::pattern::pattern::Pattern;
+
 use std::io::Read;
-use archivelib::
+
+use embroidery_lib::prelude::*;
+use archivelib::do_compress;
+
+use crate::header::VipHeader;
+use crate::consts::VIP_DECODING_TABLE;
 
 pub enum VipAttributes {
     Normal,

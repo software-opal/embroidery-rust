@@ -9,6 +9,8 @@ use crate::utils::char_truncate;
 
 pub struct DstPatternWriter {}
 
+const MAX_JUMP: i32 = 121;
+
 impl Default for DstPatternWriter {
     fn default() -> Self {
         DstPatternWriter {}
@@ -27,7 +29,7 @@ impl PatternWriter for DstPatternWriter {
 
 fn write_header(
     pattern: &Pattern,
-    dst_stitches: &Vec<StitchInformation>,
+    dst_stitches: &[StitchInformation],
     writer: &mut Write,
 ) -> Result<(), WriteError> {
     let mut header: Vec<u8> = Vec::with_capacity(512);
@@ -37,12 +39,12 @@ fn write_header(
     assert!(header.len() <= 512);
     header.resize(512, 0u8);
 
-    // Do it for the cast
-    Ok(writer.write_all(&header)?)
+    writer.write_all(&header)?;
+    Ok(())
 }
 
 fn write_stitches(
-    dst_stitches: &Vec<StitchInformation>,
+    dst_stitches: &[StitchInformation],
     writer: &mut Write,
 ) -> Result<(), WriteError> {
     assert_eq!(Some(&StitchInformation::End), dst_stitches.last());
@@ -65,7 +67,7 @@ fn write_stitches(
 
 fn build_header(
     pattern: &Pattern,
-    dst_stitches: &Vec<StitchInformation>,
+    dst_stitches: &[StitchInformation],
 ) -> Result<Vec<u8>, WriteError> {
     let mut data: Vec<u8> = Vec::with_capacity(128);
     let color_count = pattern.color_groups.len();
@@ -91,7 +93,7 @@ fn build_header(
     write!(
         data,
         "PD:{: <6}\r\0\0\0",
-        ['*'; 6].into_iter().collect::<String>()
+        ['*'; 6].iter().collect::<String>()
     )?;
 
     debug!("{:?}", String::from_utf8_lossy(&data));
@@ -159,7 +161,7 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
             for s in iter {
                 let dx = ((s.x * 10.).trunc() as i32) - ox;
                 let dy = ((s.y * 10.).trunc() as i32) - oy;
-                if dx.abs() > 121 || dy.abs() > 121 {
+                if dx.abs() > MAX_JUMP || dy.abs() > MAX_JUMP {
                     return Err(WriteError::UnsupportedStitch {
                         stitch: s.clone(),
                         idx: Some(idx),
@@ -206,7 +208,7 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
 
     if delta_x == 0 && delta_y == 0 {
         Vec::new()
-    } else if delta_x.abs() <= 121 && delta_y.abs() <= 121 {
+    } else if delta_x.abs() <= MAX_JUMP && delta_y.abs() <= MAX_JUMP {
         vec![StitchInformation::Move(
             delta_x as i8,
             delta_y as i8,
@@ -217,11 +219,14 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
         let abs_y = delta_y.abs();
         let sign_x = delta_x.signum() as i8;
         let sign_y = delta_y.signum() as i8;
-        let chunks = (f64::max(abs_x as f64 / 121., abs_y as f64 / 121.)).ceil();
-        let step_x = (abs_x as f64 / chunks).ceil() as i32;
-        let step_y = (abs_y as f64 / chunks).ceil() as i32;
-        assert!(step_x <= 121);
-        assert!(step_y <= 121);
+        let chunks = f64::max(
+            (f64::from(abs_x) / f64::from(MAX_JUMP)).ceil(),
+            (f64::from(abs_y) / f64::from(MAX_JUMP)).ceil(),
+        ) as i32;
+        let step_x = (f64::from(abs_x) / f64::from(chunks)).ceil() as i32;
+        let step_y = (f64::from(abs_y) / f64::from(chunks)).ceil() as i32;
+        assert!(step_x <= MAX_JUMP);
+        assert!(step_y <= MAX_JUMP);
         let mut cx = 0;
         let mut cy = 0;
         let mut re = Vec::with_capacity(chunks as usize);
@@ -229,7 +234,7 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
             "Abs: ({}, {}); Signs: ({}, {}); Chunks: {}; Jump: ({}, {})",
             abs_x, abs_y, sign_x, sign_y, chunks, step_x, step_y
         );
-        for i in 0..(chunks as i32 + 1) {
+        for i in 0..=chunks {
             let (nx, ny) = (i32::min(abs_x, i * step_x), i32::min(abs_y, i * step_y));
             re.push(StitchInformation::Move(
                 sign_x * (nx - cx) as i8,

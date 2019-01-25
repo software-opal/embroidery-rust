@@ -1,9 +1,15 @@
 macro_rules! expand_from_delta {
-    ($x:ident, $y:ident,y, $sign:tt, $val:tt) => {
-        $y = $y $sign $val
+    ($x:ident, $y:ident,y, +, $val:tt) => {
+        $y += $val;
     };
-    ($x:ident, $y:ident,x, $sign:tt, $val:tt) => {
-        $x = $x $sign $val
+    ($x:ident, $y:ident,y, -, $val:tt) => {
+        $y -= $val;
+    };
+    ($x:ident, $y:ident,x, +, $val:tt) => {
+        $x += $val;
+    };
+    ($x:ident, $y:ident,x, -, $val:tt) => {
+        $x -= $val;
     };
 }
 
@@ -11,13 +17,13 @@ macro_rules! expand_to_condition {
     ($x:ident, $y:ident,y, $sign:tt, $val:tt: $block:block) => {
         if (0 $sign $y) >= (($val - 1) / 2 + 1) {
             $block;
-            $y = $y - (0 $sign $val);
+            $y -= 0 $sign $val;
         }
     };
     ($x:ident, $y:ident,x, $sign:tt, $val:tt: $block:block) => {
         if (0 $sign $x) >= (($val - 1) / 2 + 1) {
             $block;
-            $x = $x - (0 $sign $val);
+            $x -= 0 $sign $val;
         }
     };
 }
@@ -43,7 +49,7 @@ macro_rules! stitch_definitions {
             }
             let mut x = _x;
             let mut y = _y;
-            let mut bytes: u32 = 0_00_00_03;
+            let mut bytes: u32 = 0x00_00_03;
             $(
                 expand_to_condition!(x, y, $var, $sign, $val: {
                     bytes |= $bits;
@@ -102,41 +108,41 @@ impl StitchType {
             _ => StitchType::Regular,
         }
     }
-    pub fn with_stop(&self) -> Self {
+    pub fn with_stop(self) -> Self {
         match self {
-            &StitchType::Stop => StitchType::Stop,
-            &StitchType::Jump => StitchType::JumpStop,
-            &StitchType::JumpStop => StitchType::JumpStop,
-            &StitchType::Regular => StitchType::Stop,
+            StitchType::Stop => StitchType::Stop,
+            StitchType::Jump => StitchType::JumpStop,
+            StitchType::JumpStop => StitchType::JumpStop,
+            StitchType::Regular => StitchType::Stop,
         }
     }
-    pub fn with_jump(&self) -> Self {
+    pub fn with_jump(self) -> Self {
         match self {
-            &StitchType::Stop => StitchType::JumpStop,
-            &StitchType::Jump => StitchType::Jump,
-            &StitchType::JumpStop => StitchType::JumpStop,
-            &StitchType::Regular => StitchType::Jump,
+            StitchType::Stop => StitchType::JumpStop,
+            StitchType::Jump => StitchType::Jump,
+            StitchType::JumpStop => StitchType::JumpStop,
+            StitchType::Regular => StitchType::Jump,
         }
     }
 
-    pub fn is_jump(&self) -> bool {
+    pub fn is_jump(self) -> bool {
         match self {
-            &StitchType::Stop => false,
-            &StitchType::Jump => true,
-            &StitchType::JumpStop => true,
-            &StitchType::Regular => false,
+            StitchType::Stop => false,
+            StitchType::Jump => true,
+            StitchType::JumpStop => true,
+            StitchType::Regular => false,
         }
     }
-    pub fn is_stop(&self) -> bool {
+    pub fn is_stop(self) -> bool {
         match self {
-            &StitchType::Stop => true,
-            &StitchType::Jump => false,
-            &StitchType::JumpStop => true,
-            &StitchType::Regular => false,
+            StitchType::Stop => true,
+            StitchType::Jump => false,
+            StitchType::JumpStop => true,
+            StitchType::Regular => false,
         }
     }
-    pub fn is_regular(&self) -> bool {
-        return !self.is_jump() && !self.is_stop();
+    pub fn is_regular(self) -> bool {
+        !self.is_jump() && !self.is_stop()
     }
 }
 
@@ -148,9 +154,9 @@ pub enum StitchInformation {
 
 impl StitchInformation {
     pub fn from_bytes(bytes: [u8; 3]) -> Self {
-        let val: u32 = bytes[0] as u32;
-        let val: u32 = (bytes[1] as u32) | (val << 8);
-        let val: u32 = (bytes[2] as u32) | (val << 8);
+        let val: u32 = u32::from(bytes[0]);
+        let val: u32 = u32::from(bytes[1]) | (val << 8);
+        let val: u32 = u32::from(bytes[2]) | (val << 8);
         let (x, y) = from_int(val);
         if val & 0x_00_00_F0 == 0x_00_00_F0 {
             StitchInformation::End
@@ -168,13 +174,13 @@ impl StitchInformation {
                     StitchType::JumpStop => 0xC0,
                     StitchType::Regular => 0x00,
                 };
-                return Some([
+                Some([
                     ((val >> 16) & 0xFF) as u8,
                     ((val >> 8) & 0xFF) as u8,
                     option_bits | (val & 0xFF) as u8,
-                ]);
+                ])
             }
-            StitchInformation::End => return Some([0x00, 0x00, 0xF3]),
+            StitchInformation::End => Some([0x00, 0x00, 0xF3]),
         }
     }
 }

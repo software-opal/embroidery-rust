@@ -5,7 +5,7 @@ use svgtypes::{PathBuilder, WriteBuffer, WriteOptions};
 
 use embroidery_lib::format::errors::WriteResult as Result;
 use embroidery_lib::format::traits::PatternWriter;
-use embroidery_lib::pattern::{Color, Pattern};
+use embroidery_lib::prelude::*;
 
 const LINE_WIDTH: f64 = 0.2;
 const STITCH_DIAMETER: f64 = 0.4;
@@ -20,12 +20,12 @@ impl Default for SvgPatternWriter {
 
 impl PatternWriter for SvgPatternWriter {
     fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<()> {
-        return write_pattern(pattern, writer);
+        write_pattern(pattern, writer)
     }
 }
 
 fn generate_color(idx: usize, total: usize) -> Srgb {
-    return Lch::new(50., 100., (idx as f32) * 360.0 / (total as f32)).into();
+    Lch::new(50., 100., (idx as f32) * 360.0 / (total as f32)).into()
 }
 
 fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {

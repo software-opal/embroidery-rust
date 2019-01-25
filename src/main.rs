@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate log;
-
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufReader;
@@ -10,15 +7,15 @@ use simplelog::*;
 
 use embroidery_lib::failure::Error;
 use embroidery_lib::format::traits::{PatternLoader, PatternWriter};
-use embroidery_lib::pattern::{Pattern, PatternAttribute, Stitch};
+use embroidery_lib::prelude::*;
 
 use embroidery_fmt_dst::{DstPatternLoader, DstPatternWriter};
 use embroidery_fmt_svg::SvgPatternWriter;
 
-static dstFile: &str = "tests/dst/test_data/OSHLogo.dst";
-// static dstFile: &str = "tests/dst/test_data/Embroidermodder.dst";
-// static dstFile: &str = "tests/madeirausa.com/goldfish.dst";
-static svgFile: &str = "OSHLogo.svg";
+static DST_FILE: &str = "tests/dst/test_data/OSHLogo.dst";
+// static DST_FILE: &str = "tests/dst/test_data/Embroidermodder.dst";
+// static DST_FILE: &str = "tests/madeirausa.com/goldfish.dst";
+static SVG_FILE: &str = "OSHLogo.svg";
 
 fn main() -> Result<(), Error> {
     TermLogger::init(
@@ -33,15 +30,15 @@ fn main() -> Result<(), Error> {
     let dst = DstPatternLoader {};
     let dst_w = DstPatternWriter {};
     let svg = SvgPatternWriter {};
-    let mut orig_reader = BufReader::new(File::open(dstFile)?);
+    let mut orig_reader = BufReader::new(File::open(DST_FILE)?);
     let orig_pattern = dst.read_pattern(&mut orig_reader)?;
 
-    let mut writer = BufWriter::new(File::create(svgFile)?);
+    let mut writer = BufWriter::new(File::create(SVG_FILE)?);
     svg.write_pattern(&orig_pattern, &mut writer)?;
 
     let pattern = test_read_write_pair(&dst, &dst_w, &orig_pattern, 2);
 
-    let mut writer = BufWriter::new(File::create(svgFile.to_owned() + ".dst")?);
+    let mut writer = BufWriter::new(File::create(SVG_FILE.to_owned() + ".dst")?);
     dst_w.write_pattern(&pattern, &mut writer)?;
 
     Ok(())
