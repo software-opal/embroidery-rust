@@ -1,8 +1,8 @@
-use embroidery_rust::format::traits::PatternLoader;
-use embroidery_rust::pattern::PatternAttribute;
-use embroidery_rust::pattern::Stitch;
+use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::pattern::PatternAttribute;
+use embroidery_lib::pattern::Stitch;
 
-use embroidery_rust::formats::dst::DstPatternLoader;
+use embroidery_fmt_dst::DstPatternLoader;
 
 #[test]
 fn test_file_load() {

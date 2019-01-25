@@ -1,0 +1,12 @@
+[package]
+name = "embroidery-lib"
+version = "0.1.0"
+authors = ["Opal <code@opal.codes>"]
+edition = "2018"
+
+[dependencies]
+euclid = "^0.18.2"
+failure = "^0.1"
+log = "^0.4"
+palette = "^0.4.1"
+byteorder = "1"

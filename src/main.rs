@@ -1,28 +1,23 @@
-extern crate embroidery_rust;
-extern crate failure;
 #[macro_use]
 extern crate log;
-extern crate simplelog;
 
-use embroidery_rust::pattern::Pattern;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::BufWriter;
 
-use failure::Error;
 use simplelog::*;
 
-use embroidery_rust::format::traits::{PatternLoader, PatternWriter};
-use embroidery_rust::pattern::PatternAttribute;
-use embroidery_rust::pattern::Stitch;
+use embroidery_lib::failure::Error;
+use embroidery_lib::format::traits::{PatternLoader, PatternWriter};
+use embroidery_lib::pattern::{Pattern, PatternAttribute, Stitch};
 
-use embroidery_rust::formats::dst::{DstPatternLoader, DstPatternWriter};
-use embroidery_rust::formats::svg::SvgPatternWriter;
+use embroidery_fmt_dst::{DstPatternLoader, DstPatternWriter};
+use embroidery_fmt_svg::SvgPatternWriter;
 
-// static dstFile: &str = "tests/dst/test_data/OSHLogo.dst";
+static dstFile: &str = "tests/dst/test_data/OSHLogo.dst";
 // static dstFile: &str = "tests/dst/test_data/Embroidermodder.dst";
-static dstFile: &str = "tests/madeirausa.com/goldfish.dst";
+// static dstFile: &str = "tests/madeirausa.com/goldfish.dst";
 static svgFile: &str = "OSHLogo.svg";
 
 fn main() -> Result<(), Error> {

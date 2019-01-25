@@ -1,13 +1,11 @@
 use std::io::Write;
 
-use crate::format::errors::{WriteError, WriteResult as Result};
-use crate::format::traits::PatternWriter;
-use crate::pattern::stitch::Stitch;
-use crate::pattern::{Pattern, PatternAttribute};
+use embroidery_lib::format::traits::PatternWriter;
+use embroidery_lib::prelude::*;
+
+use crate::stitch_info::{StitchInformation, StitchType};
 use crate::utils::c_trim;
 use crate::utils::char_truncate;
-
-use super::stitch_info::{StitchInformation, StitchType};
 
 pub struct DstPatternWriter {}
 
@@ -18,7 +16,7 @@ impl Default for DstPatternWriter {
 }
 
 impl PatternWriter for DstPatternWriter {
-    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<()> {
+    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<(), WriteError> {
         let stitches = into_dst_stitches(pattern)?;
         write_header(pattern, &stitches, writer)?;
         write_stitches(&stitches, writer)?;
@@ -31,7 +29,7 @@ fn write_header(
     pattern: &Pattern,
     dst_stitches: &Vec<StitchInformation>,
     writer: &mut Write,
-) -> Result<()> {
+) -> Result<(), WriteError> {
     let mut header: Vec<u8> = Vec::with_capacity(512);
     header.extend(build_header(pattern, dst_stitches)?);
     let rem_space = 512 - header.len();
@@ -43,7 +41,10 @@ fn write_header(
     Ok(writer.write_all(&header)?)
 }
 
-fn write_stitches(dst_stitches: &Vec<StitchInformation>, writer: &mut Write) -> Result<()> {
+fn write_stitches(
+    dst_stitches: &Vec<StitchInformation>,
+    writer: &mut Write,
+) -> Result<(), WriteError> {
     assert_eq!(Some(&StitchInformation::End), dst_stitches.last());
     assert_eq!(
         1,
@@ -62,7 +63,10 @@ fn write_stitches(dst_stitches: &Vec<StitchInformation>, writer: &mut Write) -> 
     Ok(())
 }
 
-fn build_header(pattern: &Pattern, dst_stitches: &Vec<StitchInformation>) -> Result<Vec<u8>> {
+fn build_header(
+    pattern: &Pattern,
+    dst_stitches: &Vec<StitchInformation>,
+) -> Result<Vec<u8>, WriteError> {
     let mut data: Vec<u8> = Vec::with_capacity(128);
     let color_count = pattern.color_groups.len();
     let stitch_count = dst_stitches.len();
@@ -97,7 +101,7 @@ fn build_header(pattern: &Pattern, dst_stitches: &Vec<StitchInformation>) -> Res
     Ok(data)
 }
 
-fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>> {
+fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>, WriteError> {
     let mut data: Vec<u8> = Vec::with_capacity(128);
     let author = pattern
         .attributes
@@ -126,7 +130,7 @@ fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>> {
+fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteError> {
     let mut re = vec![];
     let mut inter_group_jumps = vec![];
     let mut ox: i32 = 0;

@@ -1,8 +1,7 @@
-use crate::format::errors::{ReadError, ReadResult};
+use super::consts::VIP_MAGIC_BYTES;
+use embroidery_lib::format::errors::{ReadError, ReadResult};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::io::{Read, Result, Write};
-use super::consts::VIP_MAGIC_BYTES
-;
 #[derive(Debug)]
 pub struct VipHeader {
     // Magic bytes: [0x5d ,0xfc 0x90 ,0x01]
@@ -73,7 +72,27 @@ impl VipHeader {
         })
     }
 
-    pub fn write(self, file: &mut dyn Write) -> Result<()> {
+    pub const fn header_len() -> usize {
+        VIP_MAGIC_BYTES.len() + (2 * 4) + (4 * 2) + (3 * 4) + 10 + 4
+    }
+    pub fn color_len(&self) -> usize {
+        (self.number_of_colors as usize) * 4
+    }
+    pub fn attribute_len(&self) -> usize {
+        (self.attribute_offset as usize) - Self::header_len() - self.color_len()
+    }
+    pub fn x_offset_len(&self) -> usize {
+        (self.x_offset as usize) - Self::header_len() - self.color_len() - self.attribute_len()
+    }
+    pub fn y_offset_len(&self) -> usize {
+        (self.y_offset as usize)
+            - Self::header_len()
+            - self.color_len()
+            - self.attribute_len()
+            - self.x_offset_len()
+    }
+
+    pub fn write(&self, file: &mut dyn Write) -> Result<()> {
         file.write_all(&VIP_MAGIC_BYTES)?;
         file.write_u32::<LittleEndian>(self.number_of_stitches)?;
         file.write_u32::<LittleEndian>(self.number_of_colors)?;

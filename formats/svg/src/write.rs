@@ -3,12 +3,12 @@ use std::io::Write;
 use palette::{Lch, Srgb};
 use svgtypes::{PathBuilder, WriteBuffer, WriteOptions};
 
-use crate::format::errors::WriteResult as Result;
-use crate::format::traits::PatternWriter;
-use crate::pattern::{Color, Pattern};
+use embroidery_lib::format::errors::WriteResult as Result;
+use embroidery_lib::format::traits::PatternWriter;
+use embroidery_lib::pattern::{Color, Pattern};
 
-const LINE_WIDTH: f64 = 1.8;
-const STITCH_DIAMETER: f64 = 2.3;
+const LINE_WIDTH: f64 = 0.2;
+const STITCH_DIAMETER: f64 = 0.4;
 
 pub struct SvgPatternWriter {}
 

@@ -1,2 +1,2 @@
 pub mod dst;
-extern crate embroidery_rust;
+extern crate embroidery_lib;
