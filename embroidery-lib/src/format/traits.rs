@@ -2,7 +2,7 @@ use std::io::Read;
 use std::io::Write;
 
 use crate::format::errors::{ReadResult, WriteResult};
-use crate::pattern::pattern::Pattern;
+use crate::pattern::Pattern;
 
 pub trait PatternLoader: Default {
     /// Returns true when the file is able to be loaded by this `PatternLoader`.

@@ -1,7 +1,6 @@
-use crate::pattern::stitch::ColorGroup;
-use crate::pattern::stitch::Stitch;
-use std::f64;
-use std::iter::Iterator;
+use std::{f64, iter::Iterator};
+
+use crate::stitch::{ColorGroup, Stitch};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum PatternAttribute {
@@ -20,7 +19,7 @@ pub struct Pattern {
 
 impl Pattern {
     pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
-        return self.color_groups.iter().flat_map(|g| g.iter_stitches());
+        self.color_groups.iter().flat_map(|g| g.iter_stitches())
     }
 
     pub fn get_bounds(self: &Self) -> (f64, f64, f64, f64) {
@@ -34,10 +33,10 @@ impl Pattern {
             maxx = maxx.max(stitch.x);
             maxy = maxy.max(stitch.y);
         }
-        return if minx.is_nan() || miny.is_nan() || maxx.is_nan() || maxy.is_nan() {
+        if minx.is_nan() || miny.is_nan() || maxx.is_nan() || maxy.is_nan() {
             (0., 0., 0., 0.)
         } else {
             (minx, miny, maxx, maxy)
-        };
+        }
     }
 }

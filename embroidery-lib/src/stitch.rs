@@ -10,7 +10,14 @@ A stitch group comprising of one stitch is pretty much pointless.
 A stitch represents the x,y coordinates in millimeters.
 */
 
-use crate::pattern::thread::Thread;
+use crate::colors::Color;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Thread {
+    pub color: Color,
+    pub name: String,
+    pub code: String,
+}
 
 /// Represents mm from an arbitary (0, 0) where positive values move up and right
 #[derive(Clone, Debug, PartialEq)]
@@ -68,7 +75,7 @@ impl StitchGroup {
 
 #[cfg(test)]
 mod tests {
-    use crate::pattern::stitch::Stitch;
+    use super::*;
     #[test]
     fn stitch_relative_to() {
         let s = Stitch { x: 1.0, y: 1.0 };

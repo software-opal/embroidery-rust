@@ -1,7 +1,7 @@
 use std::result;
 
 use super::StdError;
-use crate::pattern::stitch::Stitch;
+use crate::stitch::Stitch;
 
 #[derive(Fail, Debug)]
 pub enum WriteError {

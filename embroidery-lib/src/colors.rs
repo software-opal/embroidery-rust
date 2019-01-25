@@ -11,9 +11,9 @@ pub struct Color {
 impl From<Color> for palette::Srgb {
     fn from(color: Color) -> palette::Srgb {
         palette::Srgb::new(
-            (color.red as f32) / 255.,
-            (color.green as f32) / 255.,
-            (color.blue as f32) / 255.,
+            f32::from(color.red) / 255.,
+            f32::from(color.green) / 255.,
+            f32::from(color.blue) / 255.,
         )
     }
 }

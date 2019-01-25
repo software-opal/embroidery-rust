@@ -4,14 +4,17 @@ pub extern crate failure;
 #[allow(unused_imports)]
 pub extern crate log;
 
+pub mod colors;
 pub mod format;
 pub mod geom;
 pub mod pattern;
+pub mod stitch;
 
 pub mod prelude {
     pub use log::{debug, error, info, trace, warn};
 
+    pub use crate::colors::Color;
     pub use crate::format::errors::{Error, ReadError, WriteError};
-    pub use crate::pattern::{Color, ColorGroup, Pattern, PatternAttribute};
-    pub use crate::pattern::{Stitch, StitchGroup, Thread};
+    pub use crate::pattern::{Pattern, PatternAttribute};
+    pub use crate::stitch::{ColorGroup, Stitch, StitchGroup, Thread};
 }

@@ -46,7 +46,7 @@ impl From<ReadError> for Error {
 }
 impl From<WriteError> for Error {
     fn from(err: WriteError) -> Self {
-        Error::Write(err.into())
+        Error::Write(err)
     }
 }
 impl<T: Into<StdError>> From<T> for Error {
