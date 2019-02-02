@@ -1,10 +1,38 @@
-use super::consts::VIP_MAGIC_BYTES;
-use embroidery_lib::format::errors::{ReadError, ReadResult};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use embroidery_lib::format::errors::{ReadError, ReadResult};
 use std::io::{Read, Result, Write};
-#[derive(Debug)]
-pub struct VipHeader {
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum PatternType {
+    // Magic bytes: [0x5B, 0xAF, 0xC8, 0x00]
+    Hus,
     // Magic bytes: [0x5d ,0xfc 0x90 ,0x01]
+    Vip,
+}
+
+impl PatternType {
+    pub fn magic_bytes(self) -> [u8; 4] {
+        match self {
+            PatternType::Hus => [0x5B, 0xAF, 0xC8, 0x00],
+            PatternType::Vip => [0x5D, 0xFC, 0x90, 0x01],
+        }
+    }
+    pub fn match_magic_bytes(bytes: &[u8; 4]) -> Option<Self> {
+        if bytes == &[0x5B, 0xAF, 0xC8, 0x00] {
+            Some(PatternType::Hus)
+        } else if bytes == &[0x5D, 0xFC, 0xC8, 0x00] {
+            Some(PatternType::Hus)
+        } else if bytes == &[0x5D, 0xFC, 0x90, 0x01] {
+            Some(PatternType::Vip)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub struct PatternHeader {
+    pub pattern_type: PatternType,
     pub number_of_stitches: u32,
     pub number_of_colors: u32,
     pub postitive_x_hoop_size: i16,
@@ -15,21 +43,23 @@ pub struct VipHeader {
     pub x_offset: u32,
     pub y_offset: u32,
     // [0x00; 10]
-    pub color_length: u32,
 }
 
-impl VipHeader {
+impl PatternHeader {
     pub fn build(file: &mut dyn Read) -> ReadResult<Self> {
-        {
+        let pattern_type = {
             let mut magic_code = [0; 4];
             file.read_exact(&mut magic_code)?;
-            if magic_code != VIP_MAGIC_BYTES {
-                return Err(ReadError::InvalidFormatError(format!(
-                    "Incorrect magic bytes: {:?}",
-                    magic_code
-                )));
+            match PatternType::match_magic_bytes(&magic_code) {
+                Some(t) => t,
+                None => {
+                    return Err(ReadError::InvalidFormatError(format!(
+                        "Invalid magic bytes {:?}",
+                        magic_code
+                    )));
+                }
             }
-        }
+        };
 
         let number_of_stitches = file.read_u32::<LittleEndian>()?;
         let number_of_colors = file.read_u32::<LittleEndian>()?;
@@ -46,19 +76,21 @@ impl VipHeader {
         {
             let mut unknown_field = [0; 10];
             file.read_exact(&mut unknown_field)?;
-            if unknown_field == [0; 10] {
+            if unknown_field != [0; 10] {
                 return Err(ReadError::InvalidFormatError(format!(
                     "Unknown field is not blank: {:?}",
                     unknown_field
                 )));
             }
         }
+        if pattern_type == PatternType::Vip {
+            // Maybe the color length; but can sometimes be wildly inaccurate; so we'll just
+            // consume it and ignore the result.
+            let _ = file.read_u32::<LittleEndian>()?;
+        }
 
-        let color_length = file.read_u32::<LittleEndian>()?;
-
-        // assert_eq!(color_length, 0x38 + (number_of_colors << 3));
-
-        Ok(VipHeader {
+        Ok(PatternHeader {
+            pattern_type,
             number_of_stitches,
             number_of_colors,
             postitive_x_hoop_size,
@@ -68,32 +100,38 @@ impl VipHeader {
             attribute_offset,
             x_offset,
             y_offset,
-            color_length,
         })
     }
 
-    pub const fn header_len() -> usize {
-        VIP_MAGIC_BYTES.len() + (2 * 4) + (4 * 2) + (3 * 4) + 10 + 4
+    pub fn header_len(&self) -> usize {
+        // Magic bytes + #stitches + #colors + [+ve x] + [+ve y] + [-ve x] + [-ve y]
+        //  + [attr offset] + [x offset] + [y offset] + [10 bytes]
+        let header = 4 + (2 * 4) + (4 * 2) + (3 * 4) + 10;
+        let header_color_extra = match self.pattern_type {
+            PatternType::Hus => 0,
+            PatternType::Vip => 4,
+        };
+        header + header_color_extra
     }
     pub fn color_len(&self) -> usize {
-        (self.number_of_colors as usize) * 4
+        match self.pattern_type {
+            PatternType::Hus => (self.number_of_colors as usize) * 2,
+            PatternType::Vip => (self.number_of_colors as usize) * 4,
+        }
     }
+    pub fn color_consume_len(&self) -> usize {
+        (self.attribute_offset as usize) - self.header_len()
+    }
+
     pub fn attribute_len(&self) -> usize {
-        (self.attribute_offset as usize) - Self::header_len() - self.color_len()
+        (self.x_offset as usize) - (self.attribute_offset as usize)
     }
     pub fn x_offset_len(&self) -> usize {
-        (self.x_offset as usize) - Self::header_len() - self.color_len() - self.attribute_len()
-    }
-    pub fn y_offset_len(&self) -> usize {
-        (self.y_offset as usize)
-            - Self::header_len()
-            - self.color_len()
-            - self.attribute_len()
-            - self.x_offset_len()
+        (self.y_offset as usize) - (self.x_offset as usize)
     }
 
     pub fn write(&self, file: &mut dyn Write) -> Result<()> {
-        file.write_all(&VIP_MAGIC_BYTES)?;
+        file.write_all(&self.pattern_type.magic_bytes())?;
         file.write_u32::<LittleEndian>(self.number_of_stitches)?;
         file.write_u32::<LittleEndian>(self.number_of_colors)?;
         file.write_i16::<LittleEndian>(self.postitive_x_hoop_size)?;
@@ -106,7 +144,10 @@ impl VipHeader {
 
         file.write_all(&[0x00; 10])?;
 
-        file.write_u32::<LittleEndian>(self.color_length)?;
+        if self.pattern_type == PatternType::Vip {
+            // This was derrived from a number of files; Don't understand why though.
+            file.write_u32::<LittleEndian>(0x2E + 8 * self.number_of_colors)?;
+        }
         Ok(())
     }
 }
@@ -124,7 +165,8 @@ mod tests {
             0x8b, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x36, 0x00, 0x00, 0x00,
         ];
-        let header = VipHeader::build(&mut Cursor::new(&data[..])).unwrap();
+        let header = PatternHeader::build(&mut Cursor::new(&data[..])).unwrap();
+        assert_eq!(header.pattern_type, PatternType::Vip);
         assert_eq!(header.number_of_stitches, 0x00_00_03_78);
         assert_eq!(header.number_of_colors, 0x00_00_00_01);
         assert_eq!(header.postitive_x_hoop_size, 0x00_b3);
@@ -135,7 +177,7 @@ mod tests {
         assert_eq!(header.x_offset, 0x00_00_00_6b);
         assert_eq!(header.y_offset, 0x00_00_02_8b);
         // Skip 10 bytes
-        assert_eq!(header.color_length, 0x00_00_00_36);
+        // Skip 4 bytes
         let mut out = Vec::with_capacity(data.len());
         header.write(&mut Cursor::new(&mut out)).unwrap();
         assert_eq!(&data[..], &out[..])

@@ -1,6 +1,5 @@
 use embroidery_lib::format::traits::PatternLoader;
-use embroidery_lib::pattern::PatternAttribute;
-use embroidery_lib::pattern::Stitch;
+use embroidery_lib::prelude::*;
 
 use embroidery_fmt_dst::DstPatternLoader;
 

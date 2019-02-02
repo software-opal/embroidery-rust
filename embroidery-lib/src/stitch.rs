@@ -12,39 +12,56 @@ A stitch represents the x,y coordinates in millimeters.
 
 use crate::colors::Color;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Thread {
     pub color: Color,
     pub name: String,
     pub code: String,
 }
 
+impl Thread {
+    #[inline]
+    pub const fn new(color: Color, name: String, code: String) -> Self {
+        Thread { color, name, code }
+    }
+    #[inline]
+    pub fn new_str(color: Color, name: impl ToString, code: impl ToString) -> Self {
+        Thread {
+            color,
+            name: name.to_string(),
+            code: code.to_string(),
+        }
+    }
+}
+
 /// Represents mm from an arbitary (0, 0) where positive values move up and right
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Stitch {
     pub x: f64,
     pub y: f64,
 }
 
 impl Stitch {
+    #[inline]
+    pub const fn new(x: f64, y: f64) -> Self {
+        Stitch { x, y }
+    }
+    #[inline]
     pub fn relative_to(&self, other: &Self) -> (f64, f64) {
         (self.x - other.x, self.y - other.y)
     }
+    #[inline]
     pub fn distance_to(&self, other: &Self) -> f64 {
         let (dx, dy) = self.relative_to(other);
         ((dx * dx) + (dy * dy)).sqrt()
     }
+    #[inline]
     pub fn zero() -> Self {
-        Self { x: 0.0, y: 0.0 }
+        Self::default()
     }
+    #[inline]
     pub fn is_valid(&self) -> bool {
         self.x.is_finite() && self.y.is_finite()
-    }
-}
-
-impl Default for Stitch {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0 }
     }
 }
 
@@ -55,6 +72,7 @@ pub struct ColorGroup {
 }
 
 impl ColorGroup {
+    #[inline]
     pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
         self.stitch_groups.iter().flat_map(|g| g.iter_stitches())
     }
@@ -68,6 +86,7 @@ pub struct StitchGroup {
 }
 
 impl StitchGroup {
+    #[inline]
     pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
         self.stitches.iter()
     }
