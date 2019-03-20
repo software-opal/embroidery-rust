@@ -5,6 +5,7 @@ use embroidery_fmt_hus::HusVipPatternReader;
 
 use std::collections::BTreeMap;
 use std::io::Cursor;
+use std::collections::BTreeMap;
 
 #[test]
 fn test_hus_file_load() {

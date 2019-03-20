@@ -12,6 +12,8 @@ members = [
     "formats/hus",
     "formats/jef",
     "formats/svg",
+    "formats/vf3",
+    "formats/vp3",
     "formats/vp4",
 ]
 
@@ -26,4 +28,5 @@ embroidery-fmt-hus = { path = "./formats/hus" }
 embroidery-fmt-jef = { path = "./formats/jef" }
 embroidery-fmt-svg = { path = "./formats/svg" }
 embroidery-fmt-vf3 = { path = "./formats/vf3" }
+embroidery-fmt-vp3 = { path = "./formats/vp3" }
 embroidery-fmt-vp4 = { path = "./formats/vp4" }

@@ -4,6 +4,7 @@ use embroidery_fmt_csv::CsvPatternFormat;
 use embroidery_fmt_dst::DstPatternFormat;
 use embroidery_fmt_hus::HusVipPatternFormat;
 use embroidery_fmt_svg::SvgPatternFormat;
+use embroidery_fmt_vp3::Vp3PatternFormat;
 
 pub fn get_all() -> Vec<Box<dyn PatternFormat>> {
     vec![
