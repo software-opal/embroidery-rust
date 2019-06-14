@@ -160,6 +160,17 @@ urllib3 = ">=1.21.1,<1.25"
 
 [[package]]
 category = "main"
+description = "Persistent cache for requests library"
+name = "requests-cache"
+optional = false
+python-versions = "*"
+version = "0.5.0"
+
+[package.dependencies]
+requests = ">=1.1.0"
+
+[[package]]
+category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
@@ -203,7 +214,7 @@ chardet = "*"
 six = "*"
 
 [metadata]
-content-hash = "b63c502205b1d91c8072607db8a551fafab8fd05e63e64335b005f42a602ad66"
+content-hash = "2f9e027153dc3bbb1fa3f9e45f4e36c6b7f843aff38befca4c30f90665a9b354"
 python-versions = "^3.7"
 
 [metadata.hashes]
@@ -224,6 +235,7 @@ mccabe = ["ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42", "d
 pycodestyle = ["95a2219d12372f05704562a14ec30bc76b05a5b297b21a5dfe3f6fac3491ae56", "e40a936c9a450ad81df37f549d676d127b1b66000a6c500caa2b085bc0ca976c"]
 pyflakes = ["17dbeb2e3f4d772725c777fabc446d5634d1038f234e77343108ce445ea69ce0", "d976835886f8c5b31d47970ed689944a0262b5f3afa00a5a7b4dc81e5449f8a2"]
 requests = ["502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e", "7bf2a778576d825600030a110f3c0e3e8edc51dfaafe1c146e39a2027784957b"]
+requests-cache = ["6822f788c5ee248995c4bfbd725de2002ad710182ba26a666e85b64981866060", "73a7211870f7d67af5fd81cad2f67cfe1cd3eb4ee6a85155e07613968cc72dfc"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
 soupsieve = ["afa56bf14907bb09403e5d15fbed6275caa4174d36b975226e3b67a3bb6e2c4b", "eaed742b48b1f3e2d45ba6f79401b2ed5dc33b2123dfe216adb90d4bfa0ade26"]
 toml = ["229f81c57791a41d65e399fc06bf0848bab550a9dfd5ed66df18ce5f05e73d5c", "235682dd292d5899d361a811df37e04a8828a5b1da3115886b73cf81ebc9100e", "f1db651f9657708513243e61e6cc67d101a39bad662eaa9b5546f789338e07a3"]

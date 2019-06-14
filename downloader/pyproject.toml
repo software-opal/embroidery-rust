@@ -12,6 +12,7 @@ click = "^7.0"
 beautifulsoup4 = "^4.7"
 lxml = "^4.3"
 urlnormalizer = "^1.2"
+requests_cache = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^19.3b0",allows-prereleases = true}
