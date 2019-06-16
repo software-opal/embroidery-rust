@@ -17,7 +17,7 @@ def parse_html(content):
 def do_download(target_folder, resp):
     print("DO DOWN", resp.url)
     disp_type, params = cgi.parse_header(resp.headers.get("Content-Disposition"))
-    if disp_type not in ["download", 'attachment']:
+    if disp_type not in ["download", "attachment"]:
         print("Dist type mismatch", disp_type)
         return
     filename = params["filename"]
