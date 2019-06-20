@@ -1,5 +1,5 @@
-pub use self::read::{ReadError, ReadResult};
-pub use self::write::{WriteError, WriteResult};
+pub use self::read::{Error as ReadError, Result as ReadResult};
+pub use self::write::{Error as WriteError, Result as WriteResult};
 use std::fmt;
 use std::io;
 use std::result;

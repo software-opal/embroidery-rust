@@ -71,10 +71,7 @@ fn test_read_write_pair(
         }
         for (i, (orig, new)) in orig_stitches.iter().zip(stitches.iter()).enumerate() {
             if orig != new {
-                warn!(
-                    "Stitches differ at stitch {}. Original: {:?}, New: {:?}",
-                    i, orig, new
-                );
+                warn!("Stitches differ at stitch {}. Original: {:?}, New: {:?}", i, orig, new);
                 break;
             }
         }

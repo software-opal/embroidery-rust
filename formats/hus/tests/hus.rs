@@ -53,11 +53,7 @@ fn test_star_vip_file_load() {
 
     println!(
         "{}",
-        Changeset::new(
-            &format!("{:#?}", hus_pattern),
-            &format!("{:#?}", vip_pattern),
-            "\n",
-        )
+        Changeset::new(&format!("{:#?}", hus_pattern), &format!("{:#?}", vip_pattern), "\n",)
     );
     panic!()
 }

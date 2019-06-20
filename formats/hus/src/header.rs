@@ -17,12 +17,10 @@ impl PatternType {
             PatternType::Vip => [0x5D, 0xFC, 0x90, 0x01],
         }
     }
-    pub fn match_magic_bytes(bytes: &[u8; 4]) -> Option<Self> {
-        if bytes == &[0x5B, 0xAF, 0xC8, 0x00] {
+    pub fn match_magic_bytes(bytes: [u8; 4]) -> Option<Self> {
+        if bytes == [0x5B, 0xAF, 0xC8, 0x00] || bytes == [0x5D, 0xFC, 0xC8, 0x00] {
             Some(PatternType::Hus)
-        } else if bytes == &[0x5D, 0xFC, 0xC8, 0x00] {
-            Some(PatternType::Hus)
-        } else if bytes == &[0x5D, 0xFC, 0x90, 0x01] {
+        } else if bytes == [0x5D, 0xFC, 0x90, 0x01] {
             Some(PatternType::Vip)
         } else {
             None
@@ -31,6 +29,7 @@ impl PatternType {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
 pub struct PatternHeader {
     pub pattern_type: PatternType,
     pub number_of_stitches: u32,
@@ -50,14 +49,13 @@ impl PatternHeader {
         let pattern_type = {
             let mut magic_code = [0; 4];
             file.read_exact(&mut magic_code)?;
-            match PatternType::match_magic_bytes(&magic_code) {
-                Some(t) => t,
-                None => {
-                    return Err(ReadError::InvalidFormatError(format!(
-                        "Invalid magic bytes {:?}",
-                        magic_code
-                    )));
-                }
+            if let Some(t) = PatternType::match_magic_bytes(magic_code) {
+                t
+            } else {
+                return Err(ReadError::InvalidFormat(format!(
+                    "Invalid magic bytes {:?}",
+                    magic_code
+                )));
             }
         };
 
@@ -77,7 +75,7 @@ impl PatternHeader {
             let mut unknown_field = [0; 10];
             file.read_exact(&mut unknown_field)?;
             if unknown_field != [0; 10] {
-                return Err(ReadError::InvalidFormatError(format!(
+                return Err(ReadError::InvalidFormat(format!(
                     "Unknown field is not blank: {:?}",
                     unknown_field
                 )));
@@ -89,7 +87,7 @@ impl PatternHeader {
             let _ = file.read_u32::<LittleEndian>()?;
         }
 
-        Ok(PatternHeader {
+        Ok(Self {
             pattern_type,
             number_of_stitches,
             number_of_colors,
@@ -160,10 +158,9 @@ mod tests {
     #[test]
     fn test_header_roundtrip() {
         let data = [
-            0x5d, 0xfc, 0x90, 0x01, 0x78, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xb3, 0x00,
-            0xb5, 0x00, 0x4d, 0xff, 0x4c, 0xff, 0x4e, 0x00, 0x00, 0x00, 0x6b, 0x00, 0x00, 0x00,
-            0x8b, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x36, 0x00, 0x00, 0x00,
+            0x5d, 0xfc, 0x90, 0x01, 0x78, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xb3, 0x00, 0xb5, 0x00, 0x4d, 0xff,
+            0x4c, 0xff, 0x4e, 0x00, 0x00, 0x00, 0x6b, 0x00, 0x00, 0x00, 0x8b, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00,
         ];
         let header = PatternHeader::build(&mut Cursor::new(&data[..])).unwrap();
         assert_eq!(header.pattern_type, PatternType::Vip);
