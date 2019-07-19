@@ -11,7 +11,7 @@ impl<T: Read + Sized> ReadByteIterator<T> {
     where
         T: Read + Sized,
     {
-        ReadByteIterator {
+        Self {
             reader: reader.bytes(),
             closed: false,
             error: None,
@@ -34,11 +34,11 @@ impl<T: Read + Sized> Iterator for ReadByteIterator<T> {
                     self.error = Some(error);
                     self.close();
                     None
-                }
+                },
                 None => {
                     self.close();
                     None
-                }
+                },
             }
         }
     }

@@ -3,6 +3,7 @@ use std::{f64, iter::Iterator};
 use crate::stitch::{ColorGroup, Stitch};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[allow(clippy::module_name_repetitions)]
 pub enum PatternAttribute {
     Arbitary(String, String),
     Title(String),
@@ -19,24 +20,24 @@ pub struct Pattern {
 
 impl Pattern {
     pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
-        self.color_groups.iter().flat_map(|g| g.iter_stitches())
+        self.color_groups.iter().flat_map(ColorGroup::iter_stitches)
     }
 
     pub fn get_bounds(self: &Self) -> (f64, f64, f64, f64) {
-        let mut minx: f64 = f64::NAN;
-        let mut miny: f64 = f64::NAN;
-        let mut maxx: f64 = f64::NAN;
-        let mut maxy: f64 = f64::NAN;
+        let mut min_x: f64 = f64::NAN;
+        let mut min_y: f64 = f64::NAN;
+        let mut max_x: f64 = f64::NAN;
+        let mut max_y: f64 = f64::NAN;
         for stitch in self.iter_stitches() {
-            minx = minx.min(stitch.x);
-            miny = miny.min(stitch.y);
-            maxx = maxx.max(stitch.x);
-            maxy = maxy.max(stitch.y);
+            min_x = min_x.min(stitch.x);
+            min_y = min_y.min(stitch.y);
+            max_x = max_x.max(stitch.x);
+            max_y = max_y.max(stitch.y);
         }
-        if minx.is_nan() || miny.is_nan() || maxx.is_nan() || maxy.is_nan() {
+        if min_x.is_nan() || min_y.is_nan() || max_x.is_nan() || max_y.is_nan() {
             (0., 0., 0., 0.)
         } else {
-            (minx, miny, maxx, maxy)
+            (min_x, min_y, max_x, max_y)
         }
     }
 }

@@ -1,10 +1,9 @@
 use std::io::Read;
 
-use archivelib::do_decompress_level;
 use embroidery_lib::format::traits::PatternLoader;
 use embroidery_lib::prelude::*;
 
-use crate::colors::read_threads;
+// use crate::colors::read_threads;
 use crate::header::PatternHeader;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -22,11 +21,11 @@ impl PatternLoader for HusVipPatternLoader {
     fn is_loadable(&self, item: &mut Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
-        match PatternHeader::build(item) {
+        return match PatternHeader::build(item) {
             Err(ReadError::InvalidFormat(_)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
-        }
+        };
     }
 
     fn read_pattern(&self, item: &mut Read) -> Result<Pattern, ReadError> {
@@ -50,14 +49,14 @@ impl PatternLoader for HusVipPatternLoader {
         Ok(Pattern {
             name: "".to_owned(),
             attributes: vec![],
-            color_groups: convert_stitches(threads, &attributes, &x_coords, &y_coords),
+            color_groups: convert_stitches(threads, attributes, x_coords, y_coords),
         })
     }
 }
 
 fn decompress(item: &mut Read, len_opt: Option<usize>) -> Result<Box<[u8]>, ReadError> {
     let data = if let Some(len) = len_opt {
-        let mut d = vec![0; len];
+        let mut d = vec![0u8; len];
         item.read_exact(&mut d)?;
         d
     } else {
@@ -66,14 +65,20 @@ fn decompress(item: &mut Read, len_opt: Option<usize>) -> Result<Box<[u8]>, Read
         d
     };
     println!("{:X?}", data);
-    // TODO: Change this to use the level enum.
+    // TODO: Chango this to use the level enum.
     match do_decompress_level(&data, 4) {
         Ok(d) => Ok(d),
-        Err(e) => Err(ReadError::InvalidFormat(format!("Decompression failed: {:?}", e))),
+        Err(e) => Err(ReadError::InvalidFormat(format!(
+            "Decompression failed: {:?}",
+            e
+        ))),
     }
 }
 
-fn read_attributes(header: &PatternHeader, item: &mut Read) -> Result<Vec<HusVipStitchType>, ReadError> {
+fn read_attributes(
+    header: &PatternHeader,
+    item: &mut Read,
+) -> Result<Vec<HusVipStitchType>, ReadError> {
     let data = decompress(item, Some(header.attribute_len()))?;
     let mut attrs = Vec::with_capacity(data.len());
     for (i, attr) in data.iter().enumerate() {
@@ -86,13 +91,13 @@ fn read_attributes(header: &PatternHeader, item: &mut Read) -> Result<Vec<HusVip
             0x88 => {
                 // Additional stitch type. Likely to be a cut stitch.
                 HusVipStitchType::Jump
-            },
+            }
             _ => {
                 return Err(ReadError::InvalidFormat(format!(
                     "Invalid attribute({}) at stitch {}",
                     attr, i
                 )));
-            },
+            }
         });
     }
     if !attrs.is_empty() {
@@ -153,9 +158,9 @@ fn read_y_coords(_header: &PatternHeader, item: &mut Read) -> Result<Vec<i32>, R
 
 fn convert_stitches(
     threads: Vec<Thread>,
-    attributes: &[HusVipStitchType],
-    x_coords: &[i32],
-    y_coords: &[i32],
+    attributes: Vec<HusVipStitchType>,
+    x_coords: Vec<i32>,
+    y_coords: Vec<i32>,
 ) -> Vec<ColorGroup> {
     let combi_iter = attributes.iter().zip(x_coords.iter().zip(y_coords));
     let mut color_groups = Vec::new();
@@ -163,7 +168,7 @@ fn convert_stitches(
     let mut stitches = Vec::new();
     let mut last_jump: Option<(i32, i32)> = None;
 
-    for (attr, (&x, &y)) in combi_iter {
+    for (attr, (&x, y)) in combi_iter {
         match attr {
             HusVipStitchType::Normal => {
                 if let Some((jx, jy)) = last_jump {
@@ -177,7 +182,7 @@ fn convert_stitches(
                     x: f64::from(x) / 10.0,
                     y: f64::from(y) / 10.0,
                 });
-            },
+            }
             HusVipStitchType::Jump => {
                 if !stitches.is_empty() {
                     let old_stitches = stitches;
@@ -185,7 +190,7 @@ fn convert_stitches(
                     stitch_groups.push(old_stitches);
                 }
                 last_jump = Some((x, y));
-            },
+            }
             HusVipStitchType::ColorChange => {
                 if !stitches.is_empty() {
                     let old_stitches = stitches;
@@ -198,10 +203,10 @@ fn convert_stitches(
                     color_groups.push(old_sg);
                 }
                 last_jump = Some((x, y));
-            },
+            }
             HusVipStitchType::LastStitch => {
                 break;
-            },
+            }
         }
     }
     if !stitches.is_empty() {

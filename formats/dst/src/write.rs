@@ -27,11 +27,7 @@ impl PatternWriter for DstPatternWriter {
     }
 }
 
-fn write_header(
-    pattern: &Pattern,
-    dst_stitches: &[StitchInformation],
-    writer: &mut Write,
-) -> Result<(), WriteError> {
+fn write_header(pattern: &Pattern, dst_stitches: &[StitchInformation], writer: &mut Write) -> Result<(), WriteError> {
     let mut header: Vec<u8> = Vec::with_capacity(512);
     header.extend(build_header(pattern, dst_stitches)?);
     let rem_space = 512 - header.len();
@@ -43,18 +39,9 @@ fn write_header(
     Ok(())
 }
 
-fn write_stitches(
-    dst_stitches: &[StitchInformation],
-    writer: &mut Write,
-) -> Result<(), WriteError> {
+fn write_stitches(dst_stitches: &[StitchInformation], writer: &mut Write) -> Result<(), WriteError> {
     assert_eq!(Some(&StitchInformation::End), dst_stitches.last());
-    assert_eq!(
-        1,
-        dst_stitches
-            .iter()
-            .filter(|&&s| s == StitchInformation::End)
-            .count()
-    );
+    assert_eq!(1, dst_stitches.iter().filter(|&&s| s == StitchInformation::End).count());
     for &st in dst_stitches {
         // Use unwrap because any stitch that's invalid here is definately a program error.
         writer.write_all(&st.to_bytes().unwrap())?;
@@ -65,10 +52,7 @@ fn write_stitches(
     Ok(())
 }
 
-fn build_header(
-    pattern: &Pattern,
-    dst_stitches: &[StitchInformation],
-) -> Result<Vec<u8>, WriteError> {
+fn build_header(pattern: &Pattern, dst_stitches: &[StitchInformation]) -> Result<Vec<u8>, WriteError> {
     let mut data: Vec<u8> = Vec::with_capacity(128);
     let color_count = pattern.color_groups.len();
     let stitch_count = dst_stitches.len();
@@ -90,11 +74,7 @@ fn build_header(
     write!(data, "AY:{: <+6}\r", 0)?;
     write!(data, "MX:{: <+6}\r", 0)?;
     write!(data, "MY:{: <+6}\r", 0)?;
-    write!(
-        data,
-        "PD:{: <6}\r\0\0\0",
-        ['*'; 6].iter().collect::<String>()
-    )?;
+    write!(data, "PD:{: <6}\r\0\0\0", ['*'; 6].iter().collect::<String>())?;
 
     debug!("{:?}", String::from_utf8_lossy(&data));
     debug!("{:?}", data.len());
@@ -163,7 +143,7 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
                 let dy = ((s.y * 10.).trunc() as i32) - oy;
                 if dx.abs() > MAX_JUMP || dy.abs() > MAX_JUMP {
                     return Err(WriteError::UnsupportedStitch {
-                        stitch: s.clone(),
+                        stitch: *s,
                         idx: Some(idx),
                     });
                 }
@@ -175,11 +155,7 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
                 }
                 ox += dx;
                 oy += dy;
-                re.push(StitchInformation::Move(
-                    dx as i8,
-                    dy as i8,
-                    StitchType::Regular,
-                ));
+                re.push(StitchInformation::Move(dx as i8, dy as i8, StitchType::Regular));
                 idx += 1;
             }
             if sg.cut {
@@ -209,11 +185,7 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
     if delta_x == 0 && delta_y == 0 {
         Vec::new()
     } else if delta_x.abs() <= MAX_JUMP && delta_y.abs() <= MAX_JUMP {
-        vec![StitchInformation::Move(
-            delta_x as i8,
-            delta_y as i8,
-            StitchType::Jump,
-        )]
+        vec![StitchInformation::Move(delta_x as i8, delta_y as i8, StitchType::Jump)]
     } else {
         let abs_x = delta_x.abs();
         let abs_y = delta_y.abs();

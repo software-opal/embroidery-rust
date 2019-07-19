@@ -29,14 +29,11 @@ fn generate_color(idx: usize, total: usize) -> Srgb {
 }
 
 fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
-    let (minx, miny, maxx, maxy) = pattern.get_bounds();
-    let width = maxx - minx;
-    let height = maxy - miny;
+    let (min_x, min_y, max_x, max_y) = pattern.get_bounds();
+    let width = max_x - min_x;
+    let height = max_y - min_y;
 
-    writeln!(
-        writer,
-        "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
-    )?;
+    writeln!(writer, "<?xml version='1.0' encoding='UTF-8' standalone='no'?>")?;
     writeln!(writer, "<svg")?;
     writeln!(writer, " xmlns:svg=\"http://www.w3.org/2000/svg\"")?;
     writeln!(writer, " xmlns=\"http://www.w3.org/2000/svg\"")?;
@@ -50,7 +47,7 @@ fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
     writeln!(
         writer,
         " viewBox=\"{} {} {} {}\"",
-        minx - 10.,
+        min_x - 10.,
         -10.,
         width + 20.,
         height + 20.
@@ -67,11 +64,7 @@ fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
     // writeln!(writer, "    </rdf:RDF>")?;
     // writeln!(writer, "  </metadata>")?;
 
-    let total_colors = pattern
-        .color_groups
-        .iter()
-        .filter(|cg| cg.thread == None)
-        .count();
+    let total_colors = pattern.color_groups.iter().filter(|cg| cg.thread == None).count();
     let mut used_random_colors: usize = 0;
     let opt = WriteOptions {
         remove_leading_zero: true,
@@ -84,7 +77,7 @@ fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
         // TODO: Write out stitch metadata.
         let color: Color = if let Some(ref thread) = cg.thread {
             // Need clone to use the color later.
-            thread.color.clone()
+            thread.color
         } else {
             used_random_colors += 1;
             generate_color(used_random_colors - 1, total_colors).into()
@@ -100,23 +93,19 @@ fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
         for sg in cg.stitch_groups.iter() {
             let mut path = PathBuilder::with_capacity(sg.stitches.len() + 2);
             if let Some(stitch) = sg.stitches.get(0) {
-                path = path.move_to(stitch.x, maxy - stitch.y);
+                path = path.move_to(stitch.x, max_y - stitch.y);
             }
-            writeln!(
-                writer,
-                "      <g stroke='none' fill='{}' class='emb_ignore'>",
-                color
-            )?;
+            writeln!(writer, "      <g stroke='none' fill='{}' class='emb_ignore'>", color)?;
             for (i, stitch) in sg.stitches.iter().enumerate() {
                 if i != 0 {
                     // reverse y axis so +ve y moves up
-                    path = path.line_to(stitch.x, maxy - stitch.y);
+                    path = path.line_to(stitch.x, max_y - stitch.y);
                 }
                 writeln!(
                     writer,
                     "        <circle cx='{}' cy='{}' r='{}' />",
                     stitch.x,
-                    maxy - stitch.y,
+                    max_y - stitch.y,
                     STITCH_DIAMETER / 2.
                 )?;
             }

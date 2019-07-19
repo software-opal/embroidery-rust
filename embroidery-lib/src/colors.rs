@@ -9,14 +9,14 @@ pub struct Color {
 }
 
 impl Color {
-    pub const fn rgb(red: u8, green: u8, blue: u8) -> Color {
-        Color { red, green, blue }
+    pub const fn rgb(red: u8, green: u8, blue: u8) -> Self {
+        Self { red, green, blue }
     }
 }
 
 impl From<Color> for palette::Srgb {
-    fn from(color: Color) -> palette::Srgb {
-        palette::Srgb::new(
+    fn from(color: Color) -> Self {
+        Self::new(
             f32::from(color.red) / 255.,
             f32::from(color.green) / 255.,
             f32::from(color.blue) / 255.,
@@ -25,8 +25,9 @@ impl From<Color> for palette::Srgb {
 }
 
 impl From<palette::Srgb> for Color {
-    fn from(color: palette::Srgb) -> Color {
-        Color {
+    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
+    fn from(color: palette::Srgb) -> Self {
+        Self {
             red: (color.red * 255.) as u8,
             green: (color.green * 255.) as u8,
             blue: (color.blue * 255.) as u8,

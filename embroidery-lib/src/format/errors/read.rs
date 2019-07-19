@@ -3,17 +3,17 @@ use std::result;
 use super::StdError;
 
 #[derive(Fail, Debug)]
-pub enum ReadError {
+pub enum Error {
     #[fail(display = "Invalid format: {}", _0)]
-    InvalidFormatError(String),
+    InvalidFormat(String),
     #[fail(display = "{}", _0)]
     Std(#[cause] StdError),
 }
 
-impl<T: Into<StdError>> From<T> for ReadError {
+impl<T: Into<StdError>> From<T> for Error {
     fn from(err: T) -> Self {
-        ReadError::Std(err.into())
+        Error::Std(err.into())
     }
 }
 
-pub type ReadResult<T> = result::Result<T, ReadError>;
+pub type Result<T> = result::Result<T, Error>;

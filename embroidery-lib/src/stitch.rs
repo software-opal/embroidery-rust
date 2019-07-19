@@ -22,11 +22,11 @@ pub struct Thread {
 impl Thread {
     #[inline]
     pub const fn new(color: Color, name: String, code: String) -> Self {
-        Thread { color, name, code }
+        Self { color, name, code }
     }
     #[inline]
-    pub fn new_str(color: Color, name: impl ToString, code: impl ToString) -> Self {
-        Thread {
+    pub fn new_str(color: Color, name: &impl ToString, code: &impl ToString) -> Self {
+        Self {
             color,
             name: name.to_string(),
             code: code.to_string(),
@@ -44,7 +44,7 @@ pub struct Stitch {
 impl Stitch {
     #[inline]
     pub const fn new(x: f64, y: f64) -> Self {
-        Stitch { x, y }
+        Self { x, y }
     }
     #[inline]
     pub fn relative_to(&self, other: &Self) -> (f64, f64) {
@@ -74,11 +74,12 @@ pub struct ColorGroup {
 impl ColorGroup {
     #[inline]
     pub fn iter_stitches(self: &Self) -> impl Iterator<Item = &Stitch> {
-        self.stitch_groups.iter().flat_map(|g| g.iter_stitches())
+        self.stitch_groups.iter().flat_map(StitchGroup::iter_stitches)
     }
 }
 
 #[derive(Clone, Debug, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
 pub struct StitchGroup {
     pub stitches: Vec<Stitch>,
     pub trim: bool,

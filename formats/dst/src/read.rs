@@ -30,15 +30,15 @@ impl PatternLoader for DstPatternLoader {
         // Check the last byte of the file? maybe
         let mut iter = ReadByteIterator::new(item);
         match read_dst_header(&mut iter) {
-            Err(ReadError::InvalidFormatError(_)) => Ok(false),
+            Err(ReadError::InvalidFormat(_)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
         }
     }
 
-    fn read_pattern(&self, item: &mut Read) -> Result<Pattern, ReadError> {
+    fn read_pattern(&self, file: &mut Read) -> Result<Pattern, ReadError> {
         // Read the header
-        let mut iter = ReadByteIterator::new(item);
+        let mut iter = ReadByteIterator::new(file);
         let attributes = read_dst_header(&mut iter)?;
         let color_groups = read_stitches(&mut iter)?;
         let (title, attributes) = extract_title(attributes);
@@ -81,9 +81,7 @@ fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribut
     Ok(attrs)
 }
 
-fn read_header_item(
-    mut header_iter: &mut Iterator<Item = u8>,
-) -> Result<ParseResult<PatternAttribute>, ReadError> {
+fn read_header_item(mut header_iter: &mut Iterator<Item = u8>) -> Result<ParseResult<PatternAttribute>, ReadError> {
     let header = &match read_header_name(&mut header_iter) {
         ParseResult::Some(header) => header,
         ParseResult::Skip => return Ok(ParseResult::Skip),
@@ -182,9 +180,7 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>, Read
                         });
                         debug!("Last cut: {}", stitch_groups[0].cut)
                     }
-                    if !stitch_groups.is_empty()
-                        && last_irregulars.iter().any(|&(_, _, ref st)| st.is_stop())
-                    {
+                    if !stitch_groups.is_empty() && last_irregulars.iter().any(|&(_, _, ref st)| st.is_stop()) {
                         let old_stitch_groups = stitch_groups;
                         stitch_groups = Vec::new();
                         color_groups.push(ColorGroup {
@@ -217,14 +213,14 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>, Read
                     debug!("Irregular {:?} {:?} {:?}", cx, cy, stitch_type);
                     last_irregulars.push((cx, cy, stitch_type));
                 }
-            }
+            },
             ParseResult::Some(StitchInformation::End) => {
                 break;
-            }
+            },
             ParseResult::Exhausted => {
                 break;
-            }
-            ParseResult::Skip => {}
+            },
+            ParseResult::Skip => {},
         }
     }
     if !stitches.is_empty() {
@@ -249,9 +245,7 @@ fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformat
     if items.len() < 3 {
         ParseResult::Exhausted
     } else {
-        ParseResult::Some(StitchInformation::from_bytes([
-            items[0], items[1], items[2],
-        ]))
+        ParseResult::Some(StitchInformation::from_bytes([items[0], items[1], items[2]]))
     }
 }
 
@@ -307,15 +301,9 @@ mod tests {
     #[test]
     fn test_read_header_content() {
         // An empty iterator gets exhausted
-        assert_eq!(
-            read_header_content(to_u8_iter!(b"")),
-            ParseResult::Exhausted
-        );
+        assert_eq!(read_header_content(to_u8_iter!(b"")), ParseResult::Exhausted);
         // A `CR` means the end of a value, so it should be an empty value
-        assert_eq!(
-            read_header_content(to_u8_iter!(b"\r")),
-            ParseResult::Some(vec![])
-        );
+        assert_eq!(read_header_content(to_u8_iter!(b"\r")), ParseResult::Some(vec![]));
 
         assert_eq!(
             read_header_content(to_u8_iter!(b"ab")),
@@ -323,10 +311,7 @@ mod tests {
         );
 
         let iter = to_u8_iter!(b"abc\rd");
-        assert_eq!(
-            read_header_content(iter),
-            ParseResult::Some(vec![b'a', b'b', b'c'])
-        );
+        assert_eq!(read_header_content(iter), ParseResult::Some(vec![b'a', b'b', b'c']));
         assert_eq!(iter.next(), Some(b'd'));
     }
 
@@ -337,10 +322,7 @@ mod tests {
 
         let result = read_dst_header(to_u8_iter!(BASIC_HEADER_SAMPLE)).unwrap();
         let mut iter = result.iter();
-        assert_eq!(
-            iter.next(),
-            Some(&PatternAttribute::Title("crown FS 40".to_string())),
-        );
+        assert_eq!(iter.next(), Some(&PatternAttribute::Title("crown FS 40".to_string())),);
         // ST, CO, +X, -X, +Y, -Y, AX, AY, MX, MY are skipped intentionally.
         // PD is skipped intentionally.
         assert_eq!(iter.next(), None);

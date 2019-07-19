@@ -4,7 +4,7 @@ use super::StdError;
 use crate::stitch::Stitch;
 
 #[derive(Fail, Debug)]
-pub enum WriteError {
+pub enum Error {
     #[fail(display = "Unable to write stitch {:?} at {:?}", stitch, idx)]
     UnsupportedStitch { stitch: Stitch, idx: Option<usize> },
 
@@ -12,10 +12,10 @@ pub enum WriteError {
     Std(#[cause] StdError),
 }
 
-impl<T: Into<StdError>> From<T> for WriteError {
+impl<T: Into<StdError>> From<T> for Error {
     fn from(err: T) -> Self {
-        WriteError::Std(err.into())
+        Error::Std(err.into())
     }
 }
 
-pub type WriteResult<T> = result::Result<T, WriteError>;
+pub type Result<T> = result::Result<T, Error>;
