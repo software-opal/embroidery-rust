@@ -8,3 +8,4 @@ A downloader for various free embroidery designs
 - https://www.accuquilt.com/machine-embroidery.html?product_list_order=price_asc
 - https://www.onecutlane.com/product-category/freebies/
 - https://www.juliasneedledesigns.com/Freebies.html
+- http://www.grandembroiderydesigns.com/all-designs.php
