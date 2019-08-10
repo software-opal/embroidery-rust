@@ -10,13 +10,13 @@ pub trait PatternLoader {
     /// the entire file, nor should it perform a check that the contents is valid(unless of course
     /// that is the easiest way, for example when checking that a JSON document is actually a
     /// pattern).
-    fn is_loadable(&self, item: &mut Read) -> ReadResult<bool>;
+    fn is_loadable(&self, item: &mut dyn Read) -> ReadResult<bool>;
 
     /// Read the pattern from the file and return it.
-    fn read_pattern(&self, item: &mut Read) -> ReadResult<Pattern>;
+    fn read_pattern(&self, item: &mut dyn Read) -> ReadResult<Pattern>;
 }
 
 pub trait PatternWriter {
     /// Write a pattern to a file
-    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> WriteResult<()>;
+    fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> WriteResult<()>;
 }

@@ -25,7 +25,7 @@ impl Default for DstPatternLoader {
 }
 
 impl PatternLoader for DstPatternLoader {
-    fn is_loadable(&self, item: &mut Read) -> Result<bool, ReadError> {
+    fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
         let mut iter = ReadByteIterator::new(item);
@@ -36,7 +36,7 @@ impl PatternLoader for DstPatternLoader {
         }
     }
 
-    fn read_pattern(&self, file: &mut Read) -> Result<Pattern, ReadError> {
+    fn read_pattern(&self, file: &mut dyn Read) -> Result<Pattern, ReadError> {
         // Read the header
         let mut iter = ReadByteIterator::new(file);
         let attributes = read_dst_header(&mut iter)?;
@@ -65,7 +65,7 @@ fn extract_title(attrs: Vec<PatternAttribute>) -> (String, Vec<PatternAttribute>
     (title, new_attrs)
 }
 
-fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribute>, ReadError> {
+fn read_dst_header(item: &mut dyn Iterator<Item = u8>) -> Result<Vec<PatternAttribute>, ReadError> {
     let mut attrs: Vec<PatternAttribute> = Vec::new();
     let mut header_iter = item.take(512);
 
@@ -81,7 +81,7 @@ fn read_dst_header(item: &mut Iterator<Item = u8>) -> Result<Vec<PatternAttribut
     Ok(attrs)
 }
 
-fn read_header_item(mut header_iter: &mut Iterator<Item = u8>) -> Result<ParseResult<PatternAttribute>, ReadError> {
+fn read_header_item(mut header_iter: &mut dyn Iterator<Item = u8>) -> Result<ParseResult<PatternAttribute>, ReadError> {
     let header = &match read_header_name(&mut header_iter) {
         ParseResult::Some(header) => header,
         ParseResult::Skip => return Ok(ParseResult::Skip),
@@ -127,7 +127,7 @@ fn read_header_item(mut header_iter: &mut Iterator<Item = u8>) -> Result<ParseRe
     }
 }
 
-fn read_header_name(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<[u8; 2]> {
+fn read_header_name(in_bytes: &mut dyn Iterator<Item = u8>) -> ParseResult<[u8; 2]> {
     let header_bytes = Vec::from_iter(in_bytes.take(3));
     let items = header_bytes.as_slice();
     if items.len() < 3 {
@@ -139,7 +139,7 @@ fn read_header_name(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<[u8; 2]> 
     }
 }
 
-fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<Vec<u8>> {
+fn read_header_content(in_bytes: &mut dyn Iterator<Item = u8>) -> ParseResult<Vec<u8>> {
     let mut items = Vec::new();
     let mut exhausted = true;
     for item in in_bytes {
@@ -157,7 +157,7 @@ fn read_header_content(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<Vec<u8
     }
 }
 
-fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>, ReadError> {
+fn read_stitches(item: &mut dyn Iterator<Item = u8>) -> Result<Vec<ColorGroup>, ReadError> {
     let mut color_groups = Vec::new();
     let mut stitch_groups = Vec::new();
     let mut stitches = Vec::new();
@@ -239,7 +239,7 @@ fn read_stitches(item: &mut Iterator<Item = u8>) -> Result<Vec<ColorGroup>, Read
     Ok(color_groups)
 }
 
-fn read_stitch(in_bytes: &mut Iterator<Item = u8>) -> ParseResult<StitchInformation> {
+fn read_stitch(in_bytes: &mut dyn Iterator<Item = u8>) -> ParseResult<StitchInformation> {
     let header_bytes = Vec::from_iter(in_bytes.take(3));
     let items = header_bytes.as_slice();
     if items.len() < 3 {

@@ -18,7 +18,7 @@ impl Default for DstPatternWriter {
 }
 
 impl PatternWriter for DstPatternWriter {
-    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<(), WriteError> {
+    fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<(), WriteError> {
         let stitches = into_dst_stitches(pattern)?;
         write_header(pattern, &stitches, writer)?;
         write_stitches(&stitches, writer)?;
@@ -27,7 +27,7 @@ impl PatternWriter for DstPatternWriter {
     }
 }
 
-fn write_header(pattern: &Pattern, dst_stitches: &[StitchInformation], writer: &mut Write) -> Result<(), WriteError> {
+fn write_header(pattern: &Pattern, dst_stitches: &[StitchInformation], writer: &mut dyn Write) -> Result<(), WriteError> {
     let mut header: Vec<u8> = Vec::with_capacity(512);
     header.extend(build_header(pattern, dst_stitches)?);
     let rem_space = 512 - header.len();
@@ -39,7 +39,7 @@ fn write_header(pattern: &Pattern, dst_stitches: &[StitchInformation], writer: &
     Ok(())
 }
 
-fn write_stitches(dst_stitches: &[StitchInformation], writer: &mut Write) -> Result<(), WriteError> {
+fn write_stitches(dst_stitches: &[StitchInformation], writer: &mut dyn Write) -> Result<(), WriteError> {
     assert_eq!(Some(&StitchInformation::End), dst_stitches.last());
     assert_eq!(1, dst_stitches.iter().filter(|&&s| s == StitchInformation::End).count());
     for &st in dst_stitches {

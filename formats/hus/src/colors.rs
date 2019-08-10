@@ -62,7 +62,7 @@ pub const VIP_COLOR_DECODING_TABLE: [u8; 400] = [
     0x37,
 ];
 
-pub fn read_threads(header: &PatternHeader, file: &mut Read) -> Result<Vec<Thread>, ReadError> {
+pub fn read_threads(header: &PatternHeader, file: &mut dyn Read) -> Result<Vec<Thread>, ReadError> {
     let total_len = header.color_consume_len();
     let used_len = header.color_len();
     let data = {
