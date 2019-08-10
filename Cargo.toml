@@ -7,16 +7,19 @@ edition = "2018"
 [workspace]
 members = [
     "embroidery-lib",
+    "formats/csv",
     "formats/dst",
-    "formats/svg",
     "formats/hus",
+    "formats/svg",
 ]
 
 [dependencies]
+failure = "^0.1"
 log = "^0.4"
 simplelog = "^0.5.0"
 embroidery-lib = { path = "./embroidery-lib" }
+embroidery-fmt-csv = { path = "./formats/csv" }
 embroidery-fmt-dst = { path = "./formats/dst" }
-embroidery-fmt-svg = { path = "./formats/svg" }
 embroidery-fmt-hus = { path = "./formats/hus" }
 embroidery-fmt-jef = { path = "./formats/jef" }
+embroidery-fmt-svg = { path = "./formats/svg" }
