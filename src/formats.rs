@@ -10,13 +10,13 @@ type BoxedPatternWriter = Box<dyn PatternWriter>;
 
 pub fn get_all() -> Vec<(Option<BoxedPatternLoader>, Option<(String, BoxedPatternWriter)>)> {
     vec![
+        (Some(Box::new(HusVipPatternLoader::default())), None),
+        (None, Some(("svg".to_string(), Box::new(SvgPatternWriter::default())))),
+        (None, Some(("csv".to_string(), Box::new(CsvPatternWriter::default())))),
         (
             Some(Box::new(DstPatternLoader::default())),
             Some(("dst".to_string(), Box::new(DstPatternWriter::default()))),
         ),
-        (Some(Box::new(HusVipPatternLoader::default())), None),
-        (None, Some(("svg".to_string(), Box::new(SvgPatternWriter::default())))),
-        (None, Some(("csv".to_string(), Box::new(CsvPatternWriter::default())))),
     ]
 }
 

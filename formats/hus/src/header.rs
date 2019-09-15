@@ -1,5 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use embroidery_lib::format::errors::{ReadError, ReadResult};
+use embroidery_lib::str_util::c_trim;
 use std::io::{Read, Result, Write};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -28,10 +29,11 @@ impl PatternType {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
 pub struct PatternHeader {
     pub pattern_type: PatternType,
+    pub title: String,
     pub number_of_stitches: u32,
     pub number_of_colors: u32,
     pub postitive_x_hoop_size: i16,
@@ -53,8 +55,8 @@ impl PatternHeader {
                 t
             } else {
                 return Err(ReadError::InvalidFormat(format!(
-                    "Invalid magic bytes {:?}",
-                    magic_code
+                    "Invalid magic bytes [{:X}, {:X}, {:X}, {:X}]",
+                    magic_code[0], magic_code[1], magic_code[2], magic_code[3]
                 )));
             }
         };
@@ -71,16 +73,11 @@ impl PatternHeader {
         let x_offset = file.read_u32::<LittleEndian>()?;
         let y_offset = file.read_u32::<LittleEndian>()?;
 
-        {
-            let mut unknown_field = [0; 10];
-            file.read_exact(&mut unknown_field)?;
-            if unknown_field != [0; 10] {
-                return Err(ReadError::InvalidFormat(format!(
-                    "Unknown field is not blank: {:?}",
-                    unknown_field
-                )));
-            }
-        }
+        let title = {
+            let mut title = [0; 10];
+            file.read_exact(&mut title)?;
+            c_trim(&String::from_utf8_lossy(&title))
+        };
         if pattern_type == PatternType::Vip {
             // Maybe the color length; but can sometimes be wildly inaccurate; so we'll just
             // consume it and ignore the result.
@@ -89,6 +86,7 @@ impl PatternHeader {
 
         Ok(Self {
             pattern_type,
+            title,
             number_of_stitches,
             number_of_colors,
             postitive_x_hoop_size,

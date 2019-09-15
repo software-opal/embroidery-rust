@@ -4,35 +4,16 @@ use std::iter::FromIterator;
 use embroidery_lib::format::traits::PatternLoader;
 use embroidery_lib::format::utils::ReadByteIterator;
 use embroidery_lib::prelude::*;
-use embroidery_lib::str_util::c_trim;
 
-use crate::stitch_info::StitchInformation;
-use crate::stitch_info::StitchType;
+pub struct CsvPatternLoader {}
 
-const EXTENSIONS: [&'static str; 1] = ["dst"];
-
-pub struct DstPatternLoader {}
-
-#[derive(Debug, Clone, PartialEq)]
-enum ParseResult<T> {
-    Some(T),
-    Skip,
-    Exhausted,
-}
-
-impl Default for DstPatternLoader {
+impl Default for CsvPatternLoader {
     fn default() -> Self {
         DstPatternLoader {}
     }
 }
 
 impl PatternLoader for DstPatternLoader {
-    fn name(&self) -> String {
-        "dst".to_string()
-    }
-    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
-    }
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
@@ -48,9 +29,6 @@ impl PatternLoader for DstPatternLoader {
         // Read the header
         let mut iter = ReadByteIterator::new(file);
         let attributes = read_dst_header(&mut iter)?;
-        if attributes.is_empty() {
-            return Err(ReadError::InvalidFormat("File has no attributes.".to_string()));
-        }
         let color_groups = read_stitches(&mut iter)?;
         let (title, attributes) = extract_title(attributes);
         Ok(Pattern {

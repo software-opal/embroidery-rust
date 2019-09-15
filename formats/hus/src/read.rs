@@ -7,6 +7,8 @@ use embroidery_lib::prelude::*;
 use crate::colors::read_threads;
 use crate::header::PatternHeader;
 
+const EXTENSIONS: [&'static str; 2] = ["hus", "vip"];
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HusVipStitchType {
     Normal,
@@ -19,6 +21,12 @@ pub enum HusVipStitchType {
 pub struct HusVipPatternLoader {}
 
 impl PatternLoader for HusVipPatternLoader {
+    fn name(&self) -> String {
+        "hus & vip".to_string()
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
@@ -36,6 +44,12 @@ impl PatternLoader for HusVipPatternLoader {
         let attributes = read_attributes(&header, item)?;
         let x_coords = read_x_coords(&header, item)?;
         let y_coords = read_y_coords(&header, item)?;
+        debug!(
+            "attributes: {}, x_coords: {}, y_coords: {}",
+            attributes.len(),
+            x_coords.len(),
+            y_coords.len()
+        );
         if attributes.len() != x_coords.len() || attributes.len() != y_coords.len() {
             return Err(ReadError::InvalidFormat(format!(
                 "Different numbers of attributes({}), x coordinates({}) and y coordinates({})",
@@ -47,9 +61,14 @@ impl PatternLoader for HusVipPatternLoader {
 
         // let color_groups = read_stitches(&mut iter)?;
         // let (title, attributes) = extract_title(attributes);
+        let mut pattern_attrs = vec![];
+
+        if !header.title.is_empty() {
+            pattern_attrs.push(PatternAttribute::Title(header.title.clone()));
+        }
         Ok(Pattern {
-            name: "".to_owned(),
-            attributes: vec![],
+            name: header.title,
+            attributes: pattern_attrs,
             color_groups: convert_stitches(threads, &attributes, &x_coords, &y_coords),
         })
     }

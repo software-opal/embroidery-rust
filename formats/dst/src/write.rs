@@ -2,14 +2,14 @@ use std::io::Write;
 
 use embroidery_lib::format::traits::PatternWriter;
 use embroidery_lib::prelude::*;
+use embroidery_lib::str_util::{c_trim, char_truncate};
 
 use crate::stitch_info::{StitchInformation, StitchType};
-use crate::utils::c_trim;
-use crate::utils::char_truncate;
-
-pub struct DstPatternWriter {}
 
 const MAX_JUMP: i32 = 121;
+const EXTENSIONS: [&'static str; 1] = ["dst"];
+
+pub struct DstPatternWriter {}
 
 impl Default for DstPatternWriter {
     fn default() -> Self {
@@ -18,6 +18,12 @@ impl Default for DstPatternWriter {
 }
 
 impl PatternWriter for DstPatternWriter {
+    fn name(&self) -> String {
+        "dst".to_string()
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
     fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<(), WriteError> {
         let stitches = into_dst_stitches(pattern)?;
         write_header(pattern, &stitches, writer)?;
@@ -27,7 +33,11 @@ impl PatternWriter for DstPatternWriter {
     }
 }
 
-fn write_header(pattern: &Pattern, dst_stitches: &[StitchInformation], writer: &mut dyn Write) -> Result<(), WriteError> {
+fn write_header(
+    pattern: &Pattern,
+    dst_stitches: &[StitchInformation],
+    writer: &mut dyn Write,
+) -> Result<(), WriteError> {
     let mut header: Vec<u8> = Vec::with_capacity(512);
     header.extend(build_header(pattern, dst_stitches)?);
     let rem_space = 512 - header.len();

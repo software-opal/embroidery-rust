@@ -3,6 +3,8 @@ mod formats;
 
 #[macro_use]
 pub extern crate failure;
+#[macro_use]
+pub extern crate log;
 
 use std::fs::File;
 use std::io::BufReader;
@@ -31,7 +33,7 @@ fn main() -> Result<(), Error> {
 
     let loader_unloaders = get_all();
 
-    for file in env::args() {
+    for file in env::args().skip(1) {
         let path = Path::new(&file);
         let file_name = path.file_name().ok_or("Path must have an filename")?.to_string_lossy();
 
@@ -46,7 +48,12 @@ fn main() -> Result<(), Error> {
                             loader_result = Some((i, p));
                             break;
                         },
-                        Err(ReadError::InvalidFormat(_)) => {},
+                        Err(ReadError::InvalidFormat(msg)) => warn!(
+                            "Loader {} cannot parse file {}. Reason: {}",
+                            loader.name(),
+                            file_name,
+                            msg
+                        ),
                         Err(err) => return Err(err.into()),
                     }
                 }

@@ -9,7 +9,8 @@ pub mod format;
 pub mod geom;
 pub mod pattern;
 pub mod stitch;
-pub mod util;
+pub mod stitch_util;
+pub mod str_util;
 
 pub mod prelude {
     pub use log::{debug, error, info, trace, warn};

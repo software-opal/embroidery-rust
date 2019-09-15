@@ -1,8 +1,8 @@
-use embroidery_lib::util::{build_stitch_list, StitchInfo};
 use std::io::Write;
 
 use embroidery_lib::format::traits::PatternWriter;
 use embroidery_lib::prelude::*;
+use embroidery_lib::stitch_util::{build_stitch_list, StitchInfo};
 
 pub struct CsvPatternWriter {}
 
@@ -12,7 +12,15 @@ impl Default for CsvPatternWriter {
     }
 }
 
+const EXTENSIONS: [&'static str; 1] = ["csv"];
+
 impl PatternWriter for CsvPatternWriter {
+    fn name(&self) -> String {
+        "csv".to_string()
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
     fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<(), WriteError> {
         write_header(writer)?;
         write_vars(pattern, writer)?;
@@ -118,10 +126,10 @@ fn write_stitches(pattern: &Pattern, writer: &mut dyn Write) -> Result<(), Write
                 write_csv_stitch!(writer, "JUMP", s)?;
                 write_csv_stitch!(writer, "COLOR", s)?;
             },
-            StitchInfo::Cut(s) => {write_csv_stitch!(writer, "TRIM", s)?},
-            StitchInfo::End(s) => {write_csv_stitch!(writer, "END", s)?},
-            StitchInfo::Jump(s) => {write_csv_stitch!(writer, "STITCH", s)?},
-            StitchInfo::Stitch(s) => {write_csv_stitch!(writer, "STITCH", s)?},
+            StitchInfo::Cut(s) => write_csv_stitch!(writer, "TRIM", s)?,
+            StitchInfo::End(s) => write_csv_stitch!(writer, "END", s)?,
+            StitchInfo::Jump(s) => write_csv_stitch!(writer, "STITCH", s)?,
+            StitchInfo::Stitch(s) => write_csv_stitch!(writer, "STITCH", s)?,
         }
     }
     writeln!(writer)?;

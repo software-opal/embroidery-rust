@@ -1,7 +1,7 @@
 [package]
 name = "embroidery-rust"
 version = "0.1.0"
-authors = ["Lee Symes <leesdolphin@gmail.com>"]
+authors = ["Opal Symes <code@opal.codes>"]
 edition = "2018"
 
 [workspace]

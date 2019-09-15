@@ -6,4 +6,3 @@ edition = "2018"
 
 [dependencies]
 embroidery-lib = { path = "../../embroidery-lib" }
-unicode-segmentation = "^1.2"

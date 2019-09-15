@@ -6,6 +6,8 @@ use embroidery_lib::prelude::*;
 // use crate::colors::read_threads;
 use crate::header::PatternHeader;
 
+const EXTENSIONS: [&'static str; 1] = ["jef"];
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HusVipStitchType {
     Normal,
@@ -18,6 +20,12 @@ pub enum HusVipStitchType {
 pub struct HusVipPatternLoader {}
 
 impl PatternLoader for HusVipPatternLoader {
+    fn name(&self) -> String {
+        "jef".to_string()
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
@@ -68,17 +76,11 @@ fn decompress(item: &mut dyn Read, len_opt: Option<usize>) -> Result<Box<[u8]>, 
     // TODO: Chango this to use the level enum.
     match do_decompress_level(&data, 4) {
         Ok(d) => Ok(d),
-        Err(e) => Err(ReadError::InvalidFormat(format!(
-            "Decompression failed: {:?}",
-            e
-        ))),
+        Err(e) => Err(ReadError::InvalidFormat(format!("Decompression failed: {:?}", e))),
     }
 }
 
-fn read_attributes(
-    header: &PatternHeader,
-    item: &mut dyn Read,
-) -> Result<Vec<HusVipStitchType>, ReadError> {
+fn read_attributes(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<HusVipStitchType>, ReadError> {
     let data = decompress(item, Some(header.attribute_len()))?;
     let mut attrs = Vec::with_capacity(data.len());
     for (i, attr) in data.iter().enumerate() {
@@ -91,13 +93,13 @@ fn read_attributes(
             0x88 => {
                 // Additional stitch type. Likely to be a cut stitch.
                 HusVipStitchType::Jump
-            }
+            },
             _ => {
                 return Err(ReadError::InvalidFormat(format!(
                     "Invalid attribute({}) at stitch {}",
                     attr, i
                 )));
-            }
+            },
         });
     }
     if !attrs.is_empty() {
@@ -182,7 +184,7 @@ fn convert_stitches(
                     x: f64::from(x) / 10.0,
                     y: f64::from(y) / 10.0,
                 });
-            }
+            },
             HusVipStitchType::Jump => {
                 if !stitches.is_empty() {
                     let old_stitches = stitches;
@@ -190,7 +192,7 @@ fn convert_stitches(
                     stitch_groups.push(old_stitches);
                 }
                 last_jump = Some((x, y));
-            }
+            },
             HusVipStitchType::ColorChange => {
                 if !stitches.is_empty() {
                     let old_stitches = stitches;
@@ -203,10 +205,10 @@ fn convert_stitches(
                     color_groups.push(old_sg);
                 }
                 last_jump = Some((x, y));
-            }
+            },
             HusVipStitchType::LastStitch => {
                 break;
-            }
+            },
         }
     }
     if !stitches.is_empty() {
