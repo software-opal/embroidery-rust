@@ -1,12 +1,12 @@
-use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::prelude::*;
 
-use embroidery_fmt_dst::DstPatternLoader;
+use embroidery_fmt_dst::DstPatternReader;
 
 #[test]
 fn test_file_load() {
     let mut data: &[u8] = include_bytes!("test_data/OSHLogo.dst");
-    let loader = DstPatternLoader {};
+    let loader = DstPatternReader {};
 
     let pattern = loader.read_pattern(&mut data).unwrap();
     assert_eq!(pattern.name, "OSHLogo");

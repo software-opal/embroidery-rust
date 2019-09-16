@@ -1,7 +1,5 @@
 use embroidery_lib::prelude::*;
 
-use crate::header::PatternHeader;
-
 // These colors are taken from EmbroideryModder
 pub const JEF_THREADS: [(Color, &str, &str); 79] = [
     (Color::rgb(0, 0, 0), "Black", ""),

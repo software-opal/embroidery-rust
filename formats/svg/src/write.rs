@@ -10,8 +10,6 @@ use embroidery_lib::prelude::*;
 const LINE_WIDTH: f64 = 0.2;
 const STITCH_DIAMETER: f64 = 0.4;
 
-const EXTENSIONS: [&'static str; 1] = ["svg"];
-
 pub struct SvgPatternWriter {}
 
 impl Default for SvgPatternWriter {
@@ -21,12 +19,6 @@ impl Default for SvgPatternWriter {
 }
 
 impl PatternWriter for SvgPatternWriter {
-    fn name(&self) -> String {
-        "svg".to_string()
-    }
-    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
-    }
     fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
         write_pattern(pattern, writer)
     }

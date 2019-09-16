@@ -1,14 +1,14 @@
-use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::prelude::*;
 
-use embroidery_fmt_hus::HusVipPatternLoader;
+use embroidery_fmt_hus::HusVipPatternReader;
 
 use std::io::Cursor;
 
 #[test]
 fn test_hus_file_load() {
     let data: &[u8] = include_bytes!("test_data/Embroidermodder.hus");
-    let loader = HusVipPatternLoader {};
+    let loader = HusVipPatternReader {};
 
     assert!(loader.is_loadable(&mut Cursor::new(data)).unwrap());
     let pattern = loader.read_pattern(&mut Cursor::new(data)).unwrap();
@@ -45,7 +45,7 @@ fn test_hus_file_load() {
 #[test]
 fn test_star_vip_file_load() {
     use difference::Changeset;
-    let loader = HusVipPatternLoader {};
+    let loader = HusVipPatternReader {};
     let vip_data: &[u8] = include_bytes!("test_data/Star.vip");
     let hus_data: &[u8] = include_bytes!("test_data/Star.hus");
     let vip_pattern = loader.read_pattern(&mut Cursor::new(vip_data)).unwrap();
@@ -59,7 +59,7 @@ fn test_star_vip_file_load() {
 }
 
 fn check_star_file_load(data: &[u8]) -> Pattern {
-    let loader = HusVipPatternLoader {};
+    let loader = HusVipPatternReader {};
 
     // assert!(loader.is_loadable(&mut Cursor::new(data)).unwrap());
     let pattern = loader.read_pattern(&mut Cursor::new(data)).unwrap();

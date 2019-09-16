@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
-use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::format::utils::ReadByteIterator;
 use embroidery_lib::prelude::*;
 use embroidery_lib::str_util::c_trim;
@@ -9,9 +9,7 @@ use embroidery_lib::str_util::c_trim;
 use crate::stitch_info::StitchInformation;
 use crate::stitch_info::StitchType;
 
-const EXTENSIONS: [&'static str; 1] = ["dst"];
-
-pub struct DstPatternLoader {}
+pub struct DstPatternReader {}
 
 #[derive(Debug, Clone, PartialEq)]
 enum ParseResult<T> {
@@ -20,19 +18,13 @@ enum ParseResult<T> {
     Exhausted,
 }
 
-impl Default for DstPatternLoader {
+impl Default for DstPatternReader {
     fn default() -> Self {
-        DstPatternLoader {}
+        DstPatternReader {}
     }
 }
 
-impl PatternLoader for DstPatternLoader {
-    fn name(&self) -> String {
-        "dst".to_string()
-    }
-    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
-    }
+impl PatternReader for DstPatternReader {
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe

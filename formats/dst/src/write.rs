@@ -7,7 +7,6 @@ use embroidery_lib::str_util::{c_trim, char_truncate};
 use crate::stitch_info::{StitchInformation, StitchType};
 
 const MAX_JUMP: i32 = 121;
-const EXTENSIONS: [&'static str; 1] = ["dst"];
 
 pub struct DstPatternWriter {}
 
@@ -18,12 +17,6 @@ impl Default for DstPatternWriter {
 }
 
 impl PatternWriter for DstPatternWriter {
-    fn name(&self) -> String {
-        "dst".to_string()
-    }
-    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
-    }
     fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<(), WriteError> {
         let stitches = into_dst_stitches(pattern)?;
         write_header(pattern, &stitches, writer)?;

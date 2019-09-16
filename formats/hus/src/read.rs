@@ -1,13 +1,11 @@
 use std::io::Read;
 
 use archivelib::do_decompress_level;
-use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::prelude::*;
 
 use crate::colors::read_threads;
 use crate::header::PatternHeader;
-
-const EXTENSIONS: [&'static str; 2] = ["hus", "vip"];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum HusVipStitchType {
@@ -18,15 +16,9 @@ pub enum HusVipStitchType {
 }
 
 #[derive(Default)]
-pub struct HusVipPatternLoader {}
+pub struct HusVipPatternReader {}
 
-impl PatternLoader for HusVipPatternLoader {
-    fn name(&self) -> String {
-        "hus & vip".to_string()
-    }
-    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
-    }
+impl PatternReader for HusVipPatternReader {
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe

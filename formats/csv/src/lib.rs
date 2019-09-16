@@ -1,5 +1,30 @@
 // mod read;
 mod write;
 
-// pub use self::read::CsvPatternLoader;
+use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
+
+// pub use self::read::CsvPatternReader;
 pub use self::write::CsvPatternWriter;
+
+const NAME: &'static str = "csv";
+const EXTENSIONS: [&'static str; 1] = ["csv"];
+
+#[derive(Default)]
+pub struct CsvPatternFormat {}
+
+impl PatternFormat for CsvPatternFormat {
+    fn name<'a>(&self) -> &'a str {
+        NAME
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
+    fn reader(&self) -> std::option::Option<Box<dyn PatternReader>> {
+        None
+        // Some(CsvPatternReader::default())
+    }
+    fn writer(&self) -> std::option::Option<Box<dyn PatternWriter>> {
+        let writer = Box::from(CsvPatternWriter::default());
+        Some(writer)
+    }
+}

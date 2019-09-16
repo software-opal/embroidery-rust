@@ -1,19 +1,19 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
-use embroidery_lib::format::traits::PatternLoader;
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::format::utils::ReadByteIterator;
 use embroidery_lib::prelude::*;
 
-pub struct CsvPatternLoader {}
+pub struct CsvPatternReader {}
 
-impl Default for CsvPatternLoader {
+impl Default for CsvPatternReader {
     fn default() -> Self {
-        DstPatternLoader {}
+        CsvPatternReader {}
     }
 }
 
-impl PatternLoader for DstPatternLoader {
+impl PatternReader for CsvPatternReader {
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe

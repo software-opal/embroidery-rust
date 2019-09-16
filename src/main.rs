@@ -40,9 +40,9 @@ fn main() -> Result<(), Error> {
         let mut loader_result = None;
         {
             let mut reader = BufReader::new(File::open(file.clone())?);
-            for (i, (maybe_loader, _)) in loader_unloaders.iter().enumerate() {
+            for (i, format) in loader_unloaders.iter().enumerate() {
                 reader.seek(std::io::SeekFrom::Start(0))?;
-                if let Some(loader) = maybe_loader {
+                if let Some(loader) = format.reader() {
                     match loader.read_pattern(&mut reader) {
                         Ok(p) => {
                             loader_result = Some((i, p));
@@ -50,7 +50,7 @@ fn main() -> Result<(), Error> {
                         },
                         Err(ReadError::InvalidFormat(msg)) => warn!(
                             "Loader {} cannot parse file {}. Reason: {}",
-                            loader.name(),
+                            format.name(),
                             file_name,
                             msg
                         ),
@@ -62,11 +62,14 @@ fn main() -> Result<(), Error> {
         let (loader_idx, pattern) =
             loader_result.ok_or_else(|| format!("The path cannot be read by any of the loaders: {}", file_name))?;
 
-        for (i, (_, maybe_writer)) in loader_unloaders.iter().enumerate() {
+        for (i, format) in loader_unloaders.iter().enumerate() {
             if i == loader_idx {
                 continue;
             }
-            if let Some((ext, writer)) = maybe_writer {
+            let extensions = format.extensions();
+            assert!(!extensions.is_empty());
+            if let Some(writer) = format.writer() {
+                let ext = extensions[0];
                 let output = path.with_file_name(format!("{}.{}", file_name, ext));
                 let mut out = BufWriter::new(File::create(output)?);
                 match writer.write_pattern(&pattern, &mut out) {
