@@ -5,7 +5,7 @@ authors = ["Opal <code@opal.codes>"]
 edition = "2018"
 
 [dependencies]
-archivelib = "0.1.1"
+archivelib = "0.2.0"
 byteorder = "1"
 embroidery-lib = { path = "../../embroidery-lib" }
 
