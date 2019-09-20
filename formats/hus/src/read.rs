@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use archivelib::do_decompress_level;
+use archivelib::{do_decompress_level, CompressionLevel};
 use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::prelude::*;
 
@@ -77,8 +77,7 @@ fn decompress(item: &mut dyn Read, len_opt: Option<usize>) -> Result<Box<[u8]>, 
         d
     };
     println!("{:X?}", data);
-    // TODO: Change this to use the level enum.
-    match do_decompress_level(&data, 4) {
+    match do_decompress_level(&data, CompressionLevel::Level4) {
         Ok(d) => Ok(d),
         Err(e) => Err(ReadError::InvalidFormat(format!("Decompression failed: {:?}", e))),
     }
