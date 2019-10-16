@@ -4,27 +4,16 @@ use std::iter::FromIterator;
 use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::format::utils::ReadByteIterator;
 use embroidery_lib::prelude::*;
-use embroidery_lib::str_util::c_trim;
 
-use crate::stitch_info::StitchInformation;
-use crate::stitch_info::StitchType;
+pub struct CsvPatternReader {}
 
-pub struct DstPatternReader {}
-
-#[derive(Debug, Clone, PartialEq)]
-enum ParseResult<T> {
-    Some(T),
-    Skip,
-    Exhausted,
-}
-
-impl Default for DstPatternReader {
+impl Default for CsvPatternReader {
     fn default() -> Self {
-        DstPatternReader {}
+        CsvPatternReader {}
     }
 }
 
-impl PatternReader for DstPatternReader {
+impl PatternReader for CsvPatternReader {
     fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
@@ -40,9 +29,6 @@ impl PatternReader for DstPatternReader {
         // Read the header
         let mut iter = ReadByteIterator::new(file);
         let attributes = read_dst_header(&mut iter)?;
-        if attributes.is_empty() {
-            return Err(ReadError::InvalidFormat("File has no attributes.".to_string()));
-        }
         let color_groups = read_stitches(&mut iter)?;
         let (title, attributes) = extract_title(attributes);
         Ok(Pattern {

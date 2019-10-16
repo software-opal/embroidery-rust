@@ -1,5 +1,5 @@
 [package]
-name = "embroidery-fmt-dst"
+name = "embroidery-fmt-csv"
 version = "0.1.0"
 authors = ["Opal <code@opal.codes>"]
 edition = "2018"

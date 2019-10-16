@@ -19,7 +19,7 @@ impl Default for SvgPatternWriter {
 }
 
 impl PatternWriter for SvgPatternWriter {
-    fn write_pattern(&self, pattern: &Pattern, writer: &mut Write) -> Result<()> {
+    fn write_pattern(&self, pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
         write_pattern(pattern, writer)
     }
 }
@@ -28,7 +28,7 @@ fn generate_color(idx: usize, total: usize) -> Srgb {
     Lch::new(50., 100., (idx as f32) * 360.0 / (total as f32)).into()
 }
 
-fn write_pattern(pattern: &Pattern, writer: &mut Write) -> Result<()> {
+fn write_pattern(pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
     let (min_x, min_y, max_x, max_y) = pattern.get_bounds();
     let width = max_x - min_x;
     let height = max_y - min_y;

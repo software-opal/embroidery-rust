@@ -1,3 +1,26 @@
 mod write;
 
+use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
+
 pub use self::write::SvgPatternWriter;
+
+const NAME: &'static str = "svg";
+const EXTENSIONS: [&'static str; 1] = ["svg"];
+
+#[derive(Default)]
+pub struct SvgPatternFormat {}
+
+impl PatternFormat for SvgPatternFormat {
+    fn name<'a>(&self) -> &'a str {
+        NAME
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &EXTENSIONS
+    }
+    fn reader(&self) -> std::option::Option<Box<dyn PatternReader>> {
+        None
+    }
+    fn writer(&self) -> std::option::Option<Box<dyn PatternWriter>> {
+        Some(Box::from(SvgPatternWriter::default()))
+    }
+}

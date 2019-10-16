@@ -1,7 +1,7 @@
 use std::io::Read;
 
-use archivelib::do_decompress_level;
-use embroidery_lib::format::traits::PatternLoader;
+use archivelib::{do_decompress_level, CompressionLevel};
+use embroidery_lib::format::traits::PatternReader;
 use embroidery_lib::prelude::*;
 
 use crate::colors::read_threads;
@@ -16,10 +16,10 @@ pub enum HusVipStitchType {
 }
 
 #[derive(Default)]
-pub struct HusVipPatternLoader {}
+pub struct HusVipPatternReader {}
 
-impl PatternLoader for HusVipPatternLoader {
-    fn is_loadable(&self, item: &mut Read) -> Result<bool, ReadError> {
+impl PatternReader for HusVipPatternReader {
+    fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe
         match PatternHeader::build(item) {
@@ -29,13 +29,19 @@ impl PatternLoader for HusVipPatternLoader {
         }
     }
 
-    fn read_pattern(&self, item: &mut Read) -> Result<Pattern, ReadError> {
+    fn read_pattern(&self, item: &mut dyn Read) -> Result<Pattern, ReadError> {
         // Read the header
         let header = PatternHeader::build(item)?;
         let threads = read_threads(&header, item)?;
         let attributes = read_attributes(&header, item)?;
         let x_coords = read_x_coords(&header, item)?;
         let y_coords = read_y_coords(&header, item)?;
+        debug!(
+            "attributes: {}, x_coords: {}, y_coords: {}",
+            attributes.len(),
+            x_coords.len(),
+            y_coords.len()
+        );
         if attributes.len() != x_coords.len() || attributes.len() != y_coords.len() {
             return Err(ReadError::InvalidFormat(format!(
                 "Different numbers of attributes({}), x coordinates({}) and y coordinates({})",
@@ -47,15 +53,20 @@ impl PatternLoader for HusVipPatternLoader {
 
         // let color_groups = read_stitches(&mut iter)?;
         // let (title, attributes) = extract_title(attributes);
+        let mut pattern_attrs = vec![];
+
+        if !header.title.is_empty() {
+            pattern_attrs.push(PatternAttribute::Title(header.title.clone()));
+        }
         Ok(Pattern {
-            name: "".to_owned(),
-            attributes: vec![],
+            name: header.title,
+            attributes: pattern_attrs,
             color_groups: convert_stitches(threads, &attributes, &x_coords, &y_coords),
         })
     }
 }
 
-fn decompress(item: &mut Read, len_opt: Option<usize>) -> Result<Box<[u8]>, ReadError> {
+fn decompress(item: &mut dyn Read, len_opt: Option<usize>) -> Result<Box<[u8]>, ReadError> {
     let data = if let Some(len) = len_opt {
         let mut d = vec![0; len];
         item.read_exact(&mut d)?;
@@ -66,14 +77,13 @@ fn decompress(item: &mut Read, len_opt: Option<usize>) -> Result<Box<[u8]>, Read
         d
     };
     println!("{:X?}", data);
-    // TODO: Change this to use the level enum.
-    match do_decompress_level(&data, 4) {
+    match do_decompress_level(&data, CompressionLevel::Level4) {
         Ok(d) => Ok(d),
         Err(e) => Err(ReadError::InvalidFormat(format!("Decompression failed: {:?}", e))),
     }
 }
 
-fn read_attributes(header: &PatternHeader, item: &mut Read) -> Result<Vec<HusVipStitchType>, ReadError> {
+fn read_attributes(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<HusVipStitchType>, ReadError> {
     let data = decompress(item, Some(header.attribute_len()))?;
     let mut attrs = Vec::with_capacity(data.len());
     for (i, attr) in data.iter().enumerate() {
@@ -125,7 +135,7 @@ fn read_attributes(header: &PatternHeader, item: &mut Read) -> Result<Vec<HusVip
     Ok(attrs)
 }
 
-fn read_x_coords(header: &PatternHeader, item: &mut Read) -> Result<Vec<i32>, ReadError> {
+fn read_x_coords(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<i32>, ReadError> {
     let data = decompress(item, Some(header.x_offset_len()))?;
     // x coordinates are in 0.1mm increments
     let mut curr_x: i32 = 0;
@@ -138,7 +148,7 @@ fn read_x_coords(header: &PatternHeader, item: &mut Read) -> Result<Vec<i32>, Re
     Ok(xs)
 }
 
-fn read_y_coords(_header: &PatternHeader, item: &mut Read) -> Result<Vec<i32>, ReadError> {
+fn read_y_coords(_header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<i32>, ReadError> {
     let data = decompress(item, None)?;
     // x coordinates are in 0.1mm increments
     let mut curr_y = 0;

@@ -1,19 +1,18 @@
-mod read;
-mod stitch_info;
+// mod read;
 mod write;
 
 use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
 
-pub use self::read::DstPatternReader;
-pub use self::write::DstPatternWriter;
+// pub use self::read::CsvPatternReader;
+pub use self::write::CsvPatternWriter;
 
-const NAME: &'static str = "dst";
-const EXTENSIONS: [&'static str; 1] = ["dst"];
+const NAME: &'static str = "csv";
+const EXTENSIONS: [&'static str; 1] = ["csv"];
 
 #[derive(Default)]
-pub struct DstPatternFormat {}
+pub struct CsvPatternFormat {}
 
-impl PatternFormat for DstPatternFormat {
+impl PatternFormat for CsvPatternFormat {
     fn name<'a>(&self) -> &'a str {
         NAME
     }
@@ -21,9 +20,11 @@ impl PatternFormat for DstPatternFormat {
         &EXTENSIONS
     }
     fn reader(&self) -> std::option::Option<Box<dyn PatternReader>> {
-        Some(Box::from(DstPatternReader::default()))
+        None
+        // Some(CsvPatternReader::default())
     }
     fn writer(&self) -> std::option::Option<Box<dyn PatternWriter>> {
-        Some(Box::from(DstPatternWriter::default()))
+        let writer = Box::from(CsvPatternWriter::default());
+        Some(writer)
     }
 }
