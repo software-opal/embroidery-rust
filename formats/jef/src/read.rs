@@ -15,9 +15,9 @@ pub enum HusVipStitchType {
 }
 
 #[derive(Default)]
-pub struct HusVipPatternLoader {}
+pub struct JefPatternLoader {}
 
-impl PatternLoader for HusVipPatternLoader {
+impl PatternLoader for JefPatternLoader {
     fn is_loadable(&self, item: &mut Read) -> Result<bool, ReadError> {
         // Load the header
         // Check the last byte of the file? maybe

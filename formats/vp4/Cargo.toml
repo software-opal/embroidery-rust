@@ -1,13 +1,11 @@
 [package]
-name = "embroidery-fmt-hus"
+name = "embroidery-fmt-vp4"
 version = "0.1.0"
 authors = ["Opal <code@opal.codes>"]
 edition = "2018"
 
 [dependencies]
-archivelib = "0.1.2"
 byteorder = "1"
 embroidery-lib = { path = "../../embroidery-lib" }
 
 [dev-dependencies]
-difference = "2.0.0"

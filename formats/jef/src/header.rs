@@ -77,7 +77,7 @@ impl PatternHeader {
         for _ in 0..number_of_colors {
             let idx = (file.read_u32::<LittleEndian>()? as usize) % 79;
             let (color, name, code) = JEF_THREADS[idx];
-            threads.push(Thread::new_str(color, name, code))
+            threads.push(Thread::new_str(color, &name, &code))
         }
         Ok(PatternHeader {
             stitch_abs_offset,

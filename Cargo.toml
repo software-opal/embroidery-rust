@@ -10,6 +10,8 @@ members = [
     "formats/dst",
     "formats/svg",
     "formats/hus",
+    "formats/jef",
+    "formats/vp4",
 ]
 
 [dependencies]
@@ -20,3 +22,4 @@ embroidery-fmt-dst = { path = "./formats/dst" }
 embroidery-fmt-svg = { path = "./formats/svg" }
 embroidery-fmt-hus = { path = "./formats/hus" }
 embroidery-fmt-jef = { path = "./formats/jef" }
+embroidery-fmt-vp4 = { path = "./formats/vp4" }

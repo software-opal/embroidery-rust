@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import pathlib
 import cgi
+import json
 
 
 def request(session, url):
@@ -39,10 +40,12 @@ def try_download(session, url, can_recurse=True):
         return
     p = (pathlib.Path("downloads") / name).resolve()
     p.mkdir(parents=True, exist_ok=True)
+    (p / 'source.txt').write_text(url)
     with session.get(url, stream=True) as resp:
         print(resp.headers)
         if "download" in resp.headers.get("Content-Disposition", ""):
-            return do_download(p, resp)
+            do_download(p, resp)
+            return
         if not can_recurse:
             return
         html = parse_html(resp.text)
@@ -59,14 +62,26 @@ def try_download(session, url, can_recurse=True):
 
 
 def search(session):
+    initial_url = "https://forum.embroideres.com/files/"
+    with session.cache_disabled():
+        base_url, html = request(session, initial_url)
+        if not html.find(id='elUserLink'):
+            print("The session isn't valid.")
+            print(f"Please log in here: {initial_url}")
+            print("Then update the session information")
+            return
+
     visited = set()
-    to_visit = {"https://forum.embroideres.com/files/"}
+    to_visit = {initial_url}
     while to_visit:
         url = to_visit.pop()
         if url in visited:
             continue
         visited.add(url)
         base_url, html = request(session, url)
+        if not html.find(id='elUserLink'):
+            print("The session isn't valid. ")
+
         for a in html.find_all("a"):
             if a.has_attr("href"):
                 target = normalize_url(urljoin(base_url, a["href"]))
@@ -90,17 +105,7 @@ if __name__ == "__main__":
 
     session = requests.Session()
     session.cookies.update(
-        {
-            "__cfduid": "dd9f8d78e90c441b6384d384e4104a3901560475637",
-            "ips4_device_key": "3b67d27fba133dd33ed3ceab568b2bd5",
-            "ips4_guestTime": "1560475664",
-            "ips4_hasJS": "true",
-            "ips4_IPSSessionFront": "eef480c41312c5e067506050f1739b37",
-            "ips4_ipsTimezone": "Pacific/Auckland",
-            "ips4_loggedIn": "1",
-            "ips4_login_key": "c07b0cde446019ae6646e1d9b410ed0b",
-            "ips4_member_id": "88211",
-        }
+        json.loads(pathlib.Path('session.json').read_text())
     )
 
     search(session)
