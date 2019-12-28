@@ -2,7 +2,7 @@
 name = "embroidery.downloader"
 version = "0.1.0"
 description = ""
-authors = ["Opal <code@opal.codes>"]
+authors = ["Opal Symes <code@opal.codes>"]
 license = "GPL-3.0+"
 
 [tool.poetry.dependencies]
