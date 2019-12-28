@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::io::Write;
 
-use crate::format::errors::{ReadResult, WriteResult};
+use crate::errors::{ReadResult, WriteResult};
 use crate::pattern::Pattern;
 
 pub trait PatternFormat {

@@ -1,4 +1,4 @@
-use embroidery_lib::format::traits::PatternReader;
+use embroidery_lib::format::PatternReader;
 use embroidery_lib::prelude::*;
 
 use embroidery_fmt_hus::HusVipPatternReader;

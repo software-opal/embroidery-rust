@@ -1,0 +1,51 @@
+name: Lint
+
+on: [push]
+
+jobs:
+  cargo-clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+      - name: Versions
+        run: |
+          rustc --version
+          cargo --version
+          cargo clippy -- --version
+      - name: Check `cargo check`
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --all --bins --lib --examples --tests --profile test
+      - run: rm -rfv target/*/incremental
+      - name: Check `cargo clippy`
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all --bins --lib --examples --tests --profile test
+  cargo-fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+      - name: Versions
+        run: |
+          rustc --version
+          cargo --version
+          cargo fmt -- --version
+      - name: Check `cargo format`
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check

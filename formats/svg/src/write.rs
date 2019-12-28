@@ -3,8 +3,8 @@ use std::io::Write;
 use palette::{Lch, Srgb};
 use svgtypes::{PathBuilder, WriteBuffer, WriteOptions};
 
-use embroidery_lib::format::errors::WriteResult as Result;
-use embroidery_lib::format::traits::PatternWriter;
+use embroidery_lib::errors::WriteResult as Result;
+use embroidery_lib::format::PatternWriter;
 use embroidery_lib::prelude::*;
 
 const LINE_WIDTH: f64 = 0.2;

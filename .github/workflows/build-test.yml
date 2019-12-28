@@ -1,0 +1,46 @@
+name: Build & Test
+
+on: [push]
+
+jobs:
+  build-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macOS-latest
+          - windows-latest
+          - ubuntu-latest
+        rust:
+          - stable
+          - beta
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - name: Versions
+        run: |
+          rustc --version
+          cargo --version
+      - name: Run `cargo check`
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          arguments: --workspace
+      - name: Run `cargo build`
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          arguments: --workspace --release --bins --lib
+      - name: Run `cargo test`
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          arguments: --workspace --release --bins --lib
+      - uses: actions/upload-artifact@v1
+        with:
+          name: rust-${{ matrix.rust }}-build-${{ matrix.os }}
+          path: target

@@ -1,6 +1,7 @@
 import sys
 import pathlib
 
+
 def group(iterable, size, *, type=tuple):
     group = []
     for v in iterable:
@@ -11,14 +12,17 @@ def group(iterable, size, *, type=tuple):
     if group:
         yield type(group)
 
+
 def hexify(byte_arr: bytes) -> str:
     return ' '.join(group(byte_arr.hex(), 2, type=''.join))
+
 
 def safe(byte_arr: bytes) -> str:
     return ''.join(
         chr(b) if 0x1f < b < 0x7f else '¿'
         for b in byte_arr
     )
+
 
 def main():
     for filename in sys.argv[1:]:

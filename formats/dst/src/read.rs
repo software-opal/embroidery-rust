@@ -1,10 +1,10 @@
 use std::io::Read;
 use std::iter::FromIterator;
 
-use embroidery_lib::format::traits::PatternReader;
-use embroidery_lib::format::utils::ReadByteIterator;
+use embroidery_lib::format::PatternReader;
 use embroidery_lib::prelude::*;
-use embroidery_lib::str_util::c_trim;
+use embroidery_lib::utils::c_trim;
+use embroidery_lib::utils::ReadByteIterator;
 
 use crate::stitch_info::StitchInformation;
 use crate::stitch_info::StitchType;

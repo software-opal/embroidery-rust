@@ -1,4 +1,4 @@
-use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
+use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
 use embroidery_fmt_csv::CsvPatternFormat;
 use embroidery_fmt_dst::DstPatternFormat;

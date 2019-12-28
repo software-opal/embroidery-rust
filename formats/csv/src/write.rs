@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use embroidery_lib::format::traits::PatternWriter;
+use embroidery_lib::format::PatternWriter;
 use embroidery_lib::prelude::*;
-use embroidery_lib::stitch_util::{build_stitch_list, StitchInfo};
+use embroidery_lib::utils::{build_stitch_list, StitchInfo};
 
 pub struct CsvPatternWriter {}
 

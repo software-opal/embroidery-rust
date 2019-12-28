@@ -1,6 +1,6 @@
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
-use embroidery_lib::format::errors::{ReadError, ReadResult};
-use embroidery_lib::str_util::c_trim;
+use embroidery_lib::errors::{ReadError, ReadResult};
+use embroidery_lib::utils::c_trim;
 use std::io::{Read, Result, Write};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]

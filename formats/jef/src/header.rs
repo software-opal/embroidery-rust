@@ -1,5 +1,5 @@
 use byteorder::{LittleEndian, ReadBytesExt};
-use embroidery_lib::format::errors::ReadResult;
+use embroidery_lib::errors::ReadResult;
 use embroidery_lib::prelude::*;
 use std::io::Read;
 

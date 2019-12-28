@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use archivelib::{do_decompress_level, CompressionLevel};
-use embroidery_lib::format::traits::PatternReader;
+use embroidery_lib::format::PatternReader;
 use embroidery_lib::prelude::*;
 
 use crate::colors::read_threads;
