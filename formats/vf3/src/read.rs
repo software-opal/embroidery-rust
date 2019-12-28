@@ -36,6 +36,6 @@ mod tests {
     fn test_is_parsable() {
         // Less than 3 bytes means the iterator has been exhausted.
         let mut b = b"ab";
-        assert_eq!(Vf3CollectionReader::default().is_loadable(mut b).unwrap(),false);
+        assert_eq!(Vf3CollectionReader::default().is_loadable(&mut &b[..]).unwrap(), false);
     }
 }

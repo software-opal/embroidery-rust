@@ -10,9 +10,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           override: true
-      - run: rustup component add clippy
+          components: rustfmt, clippy
       - name: Versions
         run: |
           rustc --version
@@ -36,9 +36,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly
           override: true
-      - run: rustup component add rustfmt
+          components: rustfmt, clippy
       - name: Versions
         run: |
           rustc --version
