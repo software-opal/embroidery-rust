@@ -1,8 +1,8 @@
 use std::io::Read;
 use std::io::Write;
 
-use crate::errors::{ReadResult, WriteResult};
 use crate::collection::PatternCollection;
+use crate::errors::{ReadResult, WriteResult};
 
 pub trait CollectionFormat {
     fn name<'a>(&self) -> &'a str;

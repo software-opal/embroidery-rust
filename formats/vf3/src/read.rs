@@ -1,8 +1,8 @@
 use std::io::Read;
 
 use embroidery_lib::format::CollectionReader;
-use embroidery_lib::utils::ReadByteIterator;
 use embroidery_lib::prelude::*;
+use embroidery_lib::utils::ReadByteIterator;
 
 pub struct Vf3CollectionReader {}
 
@@ -24,7 +24,7 @@ impl CollectionReader for Vf3CollectionReader {
         // Read the header
         let mut iter = ReadByteIterator::new(file);
         // TODO: This
-        return Err(ReadError::InvalidFormat("oops".to_string()))
+        return Err(ReadError::InvalidFormat("oops".to_string()));
     }
 }
 

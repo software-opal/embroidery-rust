@@ -1,5 +1,5 @@
-use embroidery_lib::prelude::*;
 use embroidery_lib::format::PatternReader;
+use embroidery_lib::prelude::*;
 use std::io::Read;
 
 const MAGIC_BYTES: [u8; 6] = [b'%', b'V', b'P', b'4', b'%', 0x01];
