@@ -1,6 +1,6 @@
 mod write;
 
-use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
+use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
 pub use self::write::SvgPatternWriter;
 
@@ -17,10 +17,10 @@ impl PatternFormat for SvgPatternFormat {
     fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
         &EXTENSIONS
     }
-    fn reader(&self) -> std::option::Option<Box<dyn PatternReader>> {
+    fn reader(&self) -> Option<Box<dyn PatternReader>> {
         None
     }
-    fn writer(&self) -> std::option::Option<Box<dyn PatternWriter>> {
+    fn writer(&self) -> Option<Box<dyn PatternWriter>> {
         Some(Box::from(SvgPatternWriter::default()))
     }
 }

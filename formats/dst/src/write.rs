@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use embroidery_lib::format::traits::PatternWriter;
+use embroidery_lib::format::PatternWriter;
 use embroidery_lib::prelude::*;
-use embroidery_lib::str_util::{c_trim, char_truncate};
+use embroidery_lib::utils::{c_trim, char_truncate};
 
 use crate::stitch_info::{StitchInformation, StitchType};
 

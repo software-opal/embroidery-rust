@@ -56,8 +56,8 @@ impl Stitch {
         ((dx * dx) + (dy * dy)).sqrt()
     }
     #[inline]
-    pub fn zero() -> Self {
-        Self::default()
+    pub const fn zero() -> Self {
+        Self::new(0.0, 0.0)
     }
     #[inline]
     pub fn is_valid(&self) -> bool {

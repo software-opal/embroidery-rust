@@ -2,7 +2,7 @@ mod colors;
 mod header;
 mod read;
 
-use embroidery_lib::format::traits::{PatternFormat, PatternReader, PatternWriter};
+use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
 pub use read::HusVipPatternReader;
 
@@ -19,10 +19,10 @@ impl PatternFormat for HusVipPatternFormat {
     fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
         &EXTENSIONS
     }
-    fn reader(&self) -> std::option::Option<Box<dyn PatternReader>> {
+    fn reader(&self) -> Option<Box<dyn PatternReader>> {
         Some(Box::from(HusVipPatternReader::default()))
     }
-    fn writer(&self) -> std::option::Option<Box<dyn PatternWriter>> {
+    fn writer(&self) -> Option<Box<dyn PatternWriter>> {
         None
     }
 }

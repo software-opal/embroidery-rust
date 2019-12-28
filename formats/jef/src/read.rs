@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use embroidery_lib::format::traits::PatternReader;
+use embroidery_lib::format::PatternReader;
 use embroidery_lib::prelude::*;
 
 // use crate::colors::read_threads;

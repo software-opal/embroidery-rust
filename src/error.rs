@@ -1,4 +1,4 @@
-use embroidery_lib::format::errors::{Error as EmbError, ReadError, StdError as EmbStdError, WriteError};
+use embroidery_lib::errors::{Error as EmbError, ReadError, StdError as EmbStdError, WriteError};
 
 use simplelog::TermLogError;
 use std::fmt;
