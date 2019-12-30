@@ -14,7 +14,7 @@ impl PatternReader for JefPatternReader {
         // Load the header
         // Check the last byte of the file? maybe
         return match PatternHeader::build(item) {
-            Err(ReadError::InvalidFormat(_)) => Ok(false),
+            Err(ReadError::InvalidFormat(_, _)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
         };
@@ -29,7 +29,7 @@ impl PatternReader for JefPatternReader {
         // let x_coords = read_x_coords(&header, item)?;
         // let y_coords = read_y_coords(&header, item)?;
         // if attributes.len() != x_coords.len() || attributes.len() != y_coords.len() {
-        //     return Err(ReadError::InvalidFormat(format!(
+        //     return Err(ReadError::invalid_format(format!(
         //         "Different numbers of attributes({}), x coordinates({}) and y coordinates({})",
         //         attributes.len(),
         //         x_coords.len(),
@@ -40,7 +40,7 @@ impl PatternReader for JefPatternReader {
         // // let color_groups = read_stitches(&mut iter)?;
         // // let (title, attributes) = extract_title(attributes);
         // Ok(Pattern {
-        //     name: "".to_owned(),
+        //     name: "".to_string(),
         //     attributes: vec![],
         //     color_groups: convert_stitches(threads, attributes, x_coords, y_coords),
         // })

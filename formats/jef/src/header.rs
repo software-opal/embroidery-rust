@@ -1,6 +1,7 @@
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::LittleEndian;
 use embroidery_lib::errors::ReadResult;
 use embroidery_lib::prelude::*;
+use embroidery_lib::read_int;
 use std::io::Read;
 
 use crate::hoops::JefHoop;
@@ -28,8 +29,8 @@ pub struct PatternHeader {
 
 impl PatternHeader {
     pub fn build(file: &mut dyn Read) -> ReadResult<Self> {
-        let stitch_abs_offset = file.read_u32::<LittleEndian>()?;
-        let format_flags = file.read_u32::<LittleEndian>()?; /* TODO: find out what this means */
+        let stitch_abs_offset = read_int!(file, u32, LittleEndian)?;
+        let format_flags = read_int!(file, u32, LittleEndian)?; /* TODO: find out what this means */
         //
         let datetime = {
             // String of: yyyymmddHHMMSS
@@ -37,45 +38,45 @@ impl PatternHeader {
             file.read_exact(&mut v)?;
             v
         };
-        assert_eq!(0, file.read_u16::<LittleEndian>()?);
+        assert_eq!(0, read_int!(file, u16, LittleEndian)?);
 
-        let number_of_colors = file.read_u32::<LittleEndian>()?;
-        let number_of_stitches = file.read_u32::<LittleEndian>()?;
-        let hoop = JefHoop::from_byte(file.read_u32::<LittleEndian>()?);
+        let number_of_colors = read_int!(file, u32, LittleEndian)?;
+        let number_of_stitches = read_int!(file, u32, LittleEndian)?;
+        let hoop = JefHoop::from_byte(read_int!(file, u32, LittleEndian)?);
 
         let bounds = (
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
         );
         let rect_from_110x110 = (
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
         );
         let rect_from_50x50 = (
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
         );
         let rect_from_200x140 = (
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
         );
         let rect_from_custom = (
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
-            file.read_u32::<LittleEndian>()?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
+            read_int!(file, u32, LittleEndian)?,
         );
         let mut threads = Vec::with_capacity(number_of_colors as usize);
         for _ in 0..number_of_colors {
-            let idx = (file.read_u32::<LittleEndian>()? as usize) % 79;
+            let idx = (read_int!(file, u32, LittleEndian)? as usize) % 79;
             let (color, name, code) = JEF_THREADS[idx];
             threads.push(Thread::new_str(color, &name, &code))
         }

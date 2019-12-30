@@ -30,7 +30,7 @@ impl PatternReader for DstPatternReader {
         // Check the last byte of the file? maybe
         let mut iter = ReadByteIterator::new(item);
         match read_dst_header(&mut iter) {
-            Err(ReadError::InvalidFormat(_)) => Ok(false),
+            Err(ReadError::InvalidFormat(_, _)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
         }
@@ -41,7 +41,7 @@ impl PatternReader for DstPatternReader {
         let mut iter = ReadByteIterator::new(file);
         let attributes = read_dst_header(&mut iter)?;
         if attributes.is_empty() {
-            return Err(ReadError::InvalidFormat("File has no attributes.".to_string()));
+            return Err(ReadError::invalid_format("File has no attributes."));
         }
         let color_groups = read_stitches(&mut iter)?;
         let (title, attributes) = extract_title(attributes);
@@ -55,7 +55,7 @@ impl PatternReader for DstPatternReader {
 
 fn extract_title(attrs: Vec<PatternAttribute>) -> (String, Vec<PatternAttribute>) {
     let mut new_attrs: Vec<PatternAttribute> = Vec::new();
-    let mut title = "Untitled".to_owned();
+    let mut title = "Untitled".to_string();
     for attr in attrs {
         if let PatternAttribute::Title(ttl) = attr {
             title = ttl;
@@ -63,7 +63,7 @@ fn extract_title(attrs: Vec<PatternAttribute>) -> (String, Vec<PatternAttribute>
             new_attrs.push(attr);
         }
     }
-    let title_attr = PatternAttribute::Title(title.to_owned());
+    let title_attr = PatternAttribute::Title(title.clone());
     new_attrs.push(title_attr);
     (title, new_attrs)
 }

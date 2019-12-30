@@ -23,7 +23,7 @@ impl PatternReader for HusVipPatternReader {
         // Load the header
         // Check the last byte of the file? maybe
         match PatternHeader::build(item) {
-            Err(ReadError::InvalidFormat(_)) => Ok(false),
+            Err(ReadError::InvalidFormat(_, _)) => Ok(false),
             Err(error) => Err(error),
             Ok(_) => Ok(true),
         }
@@ -43,7 +43,7 @@ impl PatternReader for HusVipPatternReader {
             y_coords.len()
         );
         if attributes.len() != x_coords.len() || attributes.len() != y_coords.len() {
-            return Err(ReadError::InvalidFormat(format!(
+            return Err(ReadError::invalid_format(format!(
                 "Different numbers of attributes({}), x coordinates({}) and y coordinates({})",
                 attributes.len(),
                 x_coords.len(),
@@ -79,7 +79,7 @@ fn decompress(item: &mut dyn Read, len_opt: Option<usize>) -> Result<Box<[u8]>, 
     println!("{:X?}", data);
     match do_decompress_level(&data, CompressionLevel::Level4) {
         Ok(d) => Ok(d),
-        Err(e) => Err(ReadError::InvalidFormat(format!("Decompression failed: {:?}", e))),
+        Err(e) => Err(ReadError::invalid_format(format!("Decompression failed: {:?}", e))),
     }
 }
 
@@ -98,7 +98,7 @@ fn read_attributes(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<Hu
                 HusVipStitchType::Jump
             },
             _ => {
-                return Err(ReadError::InvalidFormat(format!(
+                return Err(ReadError::invalid_format(format!(
                     "Invalid attribute({}) at stitch {}",
                     attr, i
                 )));
@@ -107,7 +107,7 @@ fn read_attributes(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<Hu
     }
     if !attrs.is_empty() {
         if attrs.last() != Some(&HusVipStitchType::LastStitch) {
-            return Err(ReadError::InvalidFormat(format!(
+            return Err(ReadError::invalid_format(format!(
                 "Invalid last stitch type: {:?}",
                 attrs.last()
             )));
@@ -119,14 +119,14 @@ fn read_attributes(header: &PatternHeader, item: &mut dyn Read) -> Result<Vec<Hu
             .collect::<Vec<_>>();
         if invalid_stitches.len() > 1 {
             invalid_stitches.truncate(invalid_stitches.len() - 1);
-            let mut error = "".to_owned();
+            let mut error = "".to_string();
             for (i, _) in invalid_stitches {
                 if !error.is_empty() {
                     error += ", ";
                 }
                 error += &format!("{}", i);
             }
-            return Err(ReadError::InvalidFormat(format!(
+            return Err(ReadError::invalid_format(format!(
                 "Last stitches not at the last position:\n{}",
                 error
             )));
