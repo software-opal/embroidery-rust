@@ -10,3 +10,6 @@ failure = "^0.1"
 log = "^0.4"
 palette = "^0.4.1"
 unicode-segmentation = "^1.2"
+
+[dev-dependencies]
+byteorder = "1"

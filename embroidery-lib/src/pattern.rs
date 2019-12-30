@@ -2,7 +2,7 @@ use std::{f64, iter::Iterator};
 
 use crate::stitch::{ColorGroup, Stitch};
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub enum PatternAttribute {
     Arbitary(String, String),

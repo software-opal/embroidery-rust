@@ -36,7 +36,7 @@ fn write_header(
     let rem_space = 512 - header.len();
     header.extend(build_extended_header(pattern, rem_space)?);
     assert!(header.len() <= 512);
-    header.resize(512, 0u8);
+    header.resize(512, 0_u8);
 
     writer.write_all(&header)?;
     Ok(())
@@ -61,7 +61,7 @@ fn build_header(pattern: &Pattern, dst_stitches: &[StitchInformation]) -> Result
     let stitch_count = dst_stitches.len();
     let (minx, miny, maxx, maxy) = pattern.get_bounds();
 
-    let title = pattern.name.to_owned();
+    let title = pattern.name.to_string();
 
     write!(data, "LA:{: <17}\r", char_truncate(&c_trim(&title), 17))?;
     write!(data, "ST:{: >7}\r", stitch_count)?;
@@ -92,7 +92,7 @@ fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>, Write
         .attributes
         .iter()
         .filter_map(|attr| match attr {
-            PatternAttribute::Author(title) => Some(title.to_owned()),
+            PatternAttribute::Author(title) => Some(title.to_string()),
             _ => None,
         })
         .next();
@@ -100,7 +100,7 @@ fn build_extended_header(pattern: &Pattern, rem: usize) -> Result<Vec<u8>, Write
         .attributes
         .iter()
         .filter_map(|attr| match attr {
-            PatternAttribute::Copyright(title) => Some(title.to_owned()),
+            PatternAttribute::Copyright(title) => Some(title.to_string()),
             _ => None,
         })
         .next();
@@ -145,10 +145,11 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
                 let dx = ((s.x * 10.).trunc() as i32) - ox;
                 let dy = ((s.y * 10.).trunc() as i32) - oy;
                 if dx.abs() > MAX_JUMP || dy.abs() > MAX_JUMP {
-                    return Err(WriteError::UnsupportedStitch {
-                        stitch: *s,
-                        idx: Some(idx),
-                    });
+                    return Err(WriteError::unsupported_stitch_msg(
+                        *s,
+                        Some(idx),
+                        "Stitch jump is too big for the format",
+                    ));
                 }
                 if idx < 10 {
                     debug!(

@@ -1,5 +1,6 @@
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{LittleEndian, WriteBytesExt};
 use embroidery_lib::errors::{ReadError, ReadResult};
+use embroidery_lib::read_int;
 use embroidery_lib::utils::c_trim;
 use std::io::{Read, Result, Write};
 
@@ -54,24 +55,24 @@ impl PatternHeader {
             if let Some(t) = PatternType::match_magic_bytes(magic_code) {
                 t
             } else {
-                return Err(ReadError::InvalidFormat(format!(
+                return Err(ReadError::invalid_format(format!(
                     "Invalid magic bytes [{:X}, {:X}, {:X}, {:X}]",
                     magic_code[0], magic_code[1], magic_code[2], magic_code[3]
                 )));
             }
         };
 
-        let number_of_stitches = file.read_u32::<LittleEndian>()?;
-        let number_of_colors = file.read_u32::<LittleEndian>()?;
+        let number_of_stitches = read_int!(file, u32, LittleEndian)?;
+        let number_of_colors = read_int!(file, u32, LittleEndian)?;
 
-        let postitive_x_hoop_size = file.read_i16::<LittleEndian>()?;
-        let postitive_y_hoop_size = file.read_i16::<LittleEndian>()?;
-        let negative_x_hoop_size = file.read_i16::<LittleEndian>()?;
-        let negative_y_hoop_size = file.read_i16::<LittleEndian>()?;
+        let postitive_x_hoop_size = read_int!(file, i16, LittleEndian)?;
+        let postitive_y_hoop_size = read_int!(file, i16, LittleEndian)?;
+        let negative_x_hoop_size = read_int!(file, i16, LittleEndian)?;
+        let negative_y_hoop_size = read_int!(file, i16, LittleEndian)?;
 
-        let attribute_offset = file.read_u32::<LittleEndian>()?;
-        let x_offset = file.read_u32::<LittleEndian>()?;
-        let y_offset = file.read_u32::<LittleEndian>()?;
+        let attribute_offset = read_int!(file, u32, LittleEndian)?;
+        let x_offset = read_int!(file, u32, LittleEndian)?;
+        let y_offset = read_int!(file, u32, LittleEndian)?;
 
         let title = {
             let mut title = [0; 10];
@@ -81,7 +82,7 @@ impl PatternHeader {
         if pattern_type == PatternType::Vip {
             // Maybe the color length; but can sometimes be wildly inaccurate; so we'll just
             // consume it and ignore the result.
-            let _ = file.read_u32::<LittleEndian>()?;
+            let _ = read_int!(file, u32, LittleEndian)?;
         }
 
         Ok(Self {

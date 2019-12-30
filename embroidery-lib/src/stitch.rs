@@ -11,26 +11,31 @@ A stitch represents the x,y coordinates in millimeters.
 */
 
 use crate::colors::Color;
+use std::collections::BTreeMap;
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub struct Thread {
     pub color: Color,
     pub name: String,
     pub code: String,
+    pub manufacturer: Option<String>,
+    pub attributes: BTreeMap<String, String>,
 }
 
 impl Thread {
     #[inline]
-    pub const fn new(color: Color, name: String, code: String) -> Self {
-        Self { color, name, code }
+    pub fn new(color: Color, name: String, code: String) -> Self {
+        Self {
+            color,
+            name,
+            code,
+            manufacturer: None,
+            attributes: BTreeMap::new(),
+        }
     }
     #[inline]
     pub fn new_str(color: Color, name: &impl ToString, code: &impl ToString) -> Self {
-        Self {
-            color,
-            name: name.to_string(),
-            code: code.to_string(),
-        }
+        Self::new(color, name.to_string(), code.to_string())
     }
 }
 
