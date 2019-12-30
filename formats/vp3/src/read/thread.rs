@@ -23,6 +23,27 @@ pub struct Vp3ThreadHeader {
     pub stitch_bytes: usize,
 }
 
+impl Vp3ThreadHeader {
+    pub fn to_thread(&self) -> Thread {
+        let color = {
+            let (red, green, blue) = self.color;
+            Color::rgb(red, green, blue)
+        };
+        let mut thread = Thread::new_str(color, &self.thread_name, &self.thread_code);
+        thread.manufacturer = Some(self.thread_manufacturer.to_string());
+        thread.attributes.insert(
+            "color_table_hex".to_string(),
+            self.color_table
+                .iter()
+                .map(|v| v.iter().map(|h| format!("{:02X}", h)).collect::<Vec<_>>().join("\n"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+
+        thread
+    }
+}
+
 pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, ReadError> {
     read_exact_magic!(reader, [0x00, 0x05, 0x00])?;
     let _next_color_offset_from_top_of_color = read_int!(reader, u32, BigEndian)?;
@@ -64,7 +85,7 @@ pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, Read
     })
 }
 
-pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Result<Vec<Vec<Stitch>>, ReadError> {
+pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Result<Vec<StitchGroup>, ReadError> {
     let mut stitch_bytes: usize = thread.stitch_bytes;
     let mut all_bytes = vec![0u8; stitch_bytes + 1];
     ub_reader.read_exact(&mut all_bytes)?;
@@ -113,7 +134,11 @@ pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Resu
                 if !stitches.is_empty() {
                     let old_stitches = stitches;
                     stitches = Vec::new();
-                    stitch_groups.push(old_stitches);
+                    stitch_groups.push(StitchGroup {
+                        stitches: old_stitches,
+                        trim: false,
+                        cut: false,
+                    });
                 }
                 cx += x;
                 cy += y;
@@ -122,15 +147,12 @@ pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Resu
         }
     }
     if !stitches.is_empty() {
-        stitch_groups.push(stitches);
+        stitch_groups.push(StitchGroup {
+            stitches: stitches,
+            trim: false,
+            cut: false,
+        });
     }
-    eprintln!(
-        "{}, {:#X?}; {} / {}",
-        all_bytes.len(),
-        &all_bytes[(all_bytes.len() - 10)..],
-        stitch_bytes,
-        thread.stitch_bytes
-    );
     read_exact_magic!(reader, [0x00_u8])?;
     let mut tmp = [0_u8; 16];
     match reader.read(&mut tmp) {
@@ -179,9 +201,6 @@ fn read_stitch(reader: &mut dyn Read) -> Result<(usize, Vp3Stitch), ReadError> {
             ))),
         }
     } else {
-        if y == -0x80 {
-            eprintln!("Possible off-by-one: ({:#X}, {:#X})", x, y)
-        }
         Ok((2, Vp3Stitch::Normal(i32::from(x) * 100, i32::from(y) * 100)))
     }
 }
@@ -203,7 +222,6 @@ mod tests {
         ];
 
         let thread = read_thread_header(&mut &data[..]).unwrap();
-        eprintln!("{:?}", thread);
         assert_eq!(
             thread,
             Vp3ThreadHeader {
@@ -235,7 +253,6 @@ mod tests {
         ];
 
         let thread = read_thread_header(&mut &data[..]).unwrap();
-        eprintln!("{:?}", thread);
         assert_eq!(
             thread,
             Vp3ThreadHeader {

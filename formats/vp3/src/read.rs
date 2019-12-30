@@ -18,7 +18,7 @@ impl PatternReader for Vp3PatternReader {
     }
     fn read_pattern(&self, ub_reader: &mut dyn Read) -> Result<Pattern, ReadError> {
         let (header, mut reader) = header::read_header(ub_reader)?;
-
+        let mut cgs = Vec::with_capacity(header.number_of_threads);
         for i in 0..header.number_of_threads {
             let thread_header = maybe_read_with_context!(
                 thread::read_thread_header(&mut reader),
@@ -26,17 +26,22 @@ impl PatternReader for Vp3PatternReader {
                 i,
                 header.number_of_threads,
             )?;
-            eprintln!("TH: {:?}", thread_header);
             let stitches = maybe_read_with_context!(
                 thread::read_stitches(&mut reader, &thread_header),
                 "Reading thread {} of {}",
                 i,
                 header.number_of_threads,
             )?;
-            eprintln!("ST Done: {}", stitches.len())
+            cgs.push(ColorGroup {
+                thread: Some(thread_header.to_thread()),
+                stitch_groups: stitches,
+            });
         }
 
-        eprintln!("{:?}", header);
-        unimplemented!();
+        Ok(Pattern {
+            attributes: vec![],
+            color_groups: cgs,
+            name: "".to_string(),
+        })
     }
 }

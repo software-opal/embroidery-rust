@@ -54,7 +54,6 @@ pub fn read_header<'a>(ub_reader: &'a mut dyn Read) -> Result<(Vp3Header, std::i
     let file_comment_string = read_wide_string_field(&mut reader, "file_comment_string")?;
 
     let hoop = read_hoop(&mut reader)?;
-    eprintln!("{:?}", hoop);
 
     read_exact_magic!(
         reader,
@@ -160,7 +159,6 @@ mod tests {
         ];
 
         let (header, _) = read_header(&mut &data[..]).unwrap();
-        eprintln!("{:?}", header);
         assert_eq!(
             header,
             Vp3Header {
@@ -201,7 +199,6 @@ mod tests {
             0x10, 0x00, 0x01, 0x4F, 0xF0, 0x00, 0x01, 0xE4, 0x60, 0x00, 0x02, 0x9F, 0xE0,
         ];
         let hoop = read_hoop(&mut &data[..]).unwrap();
-        eprintln!("{:?}", hoop);
         assert_eq!(
             hoop,
             Vp3Hoop {
@@ -237,7 +234,6 @@ mod tests {
             0x98, 0x00, 0x01, 0x3C, 0x68, 0x00, 0x02, 0x9F, 0xE0, 0x00, 0x02, 0x78, 0xD0,
         ];
         let hoop = read_hoop(&mut &data[..]).unwrap();
-        eprintln!("{:?}", hoop);
 
         assert_eq!(
             hoop,
