@@ -43,6 +43,7 @@ fn test_hus_file_load() {
 //     let pattern = check_star_file_load(data);
 // }
 #[test]
+#[ignore]
 fn test_star_vip_file_load() {
     use difference::Changeset;
     let loader = HusVipPatternReader {};
