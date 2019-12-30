@@ -1,4 +1,4 @@
-use embroidery_lib::errors::{Error as EmbError, ReadError, StdError as EmbStdError, WriteError};
+use embroidery_lib::errors::{Error as EmbError, ErrorWithContext, ReadError, StdError as EmbStdError, WriteError};
 
 use simplelog::TermLogError;
 use std::fmt;
@@ -48,9 +48,10 @@ impl From<WriteError> for Error {
 impl From<EmbError> for Error {
     fn from(err: EmbError) -> Self {
         match err {
-            EmbError::Read(e) => e.into(),
-            EmbError::Write(e) => e.into(),
-            EmbError::Standard(e) => e.into(),
+            EmbError::Read(e, ctx) => Error::EmbRead(e.set_context(ctx)),
+            EmbError::Write(e, ctx) => Error::EmbWrite(e.set_context(ctx)),
+            // We loose the context here.
+            EmbError::Standard(e, ctx) => e.into(),
         }
     }
 }
@@ -61,7 +62,7 @@ impl From<String> for Error {
 }
 impl From<&str> for Error {
     fn from(err: &str) -> Self {
-        Error::Custom(err.to_owned())
+        Error::Custom(err.to_string())
     }
 }
 

@@ -48,11 +48,12 @@ fn main() -> Result<(), Error> {
                             loader_result = Some((i, p));
                             break;
                         },
-                        Err(ReadError::InvalidFormat(msg)) => warn!(
-                            "Loader {} cannot parse file {}. Reason: {}",
+                        Err(ReadError::InvalidFormat(msg, ctx)) => warn!(
+                            "Loader {} cannot parse file {}. Reason: {}\n Context: {:#?}",
                             format.name(),
                             file_name,
-                            msg
+                            msg,
+                            ctx
                         ),
                         Err(err) => return Err(err.into()),
                     }
@@ -74,7 +75,11 @@ fn main() -> Result<(), Error> {
                 let mut out = BufWriter::new(File::create(output)?);
                 match writer.write_pattern(&pattern, &mut out) {
                     Ok(()) => {},
-                    Err(WriteError::UnsupportedStitch { stitch, idx: maybe_idx }) => {
+                    Err(WriteError::UnsupportedStitch {
+                        stitch,
+                        idx: maybe_idx,
+                        ctx: _,
+                    }) => {
                         let idx = match maybe_idx {
                             Some(idx) => format!("{}", idx),
                             None => ("unknown").to_string(),
@@ -85,7 +90,7 @@ fn main() -> Result<(), Error> {
                         )
                         .into());
                     },
-                    Err(WriteError::Std(err)) => return Err(err.into()),
+                    Err(WriteError::Std(err, _)) => return Err(err.into()),
                 }
             }
         }

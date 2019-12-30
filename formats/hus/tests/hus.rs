@@ -3,8 +3,8 @@ use embroidery_lib::prelude::*;
 
 use embroidery_fmt_hus::HusVipPatternReader;
 
-use std::io::Cursor;
 use std::collections::BTreeMap;
+use std::io::Cursor;
 
 #[test]
 fn test_hus_file_load() {
@@ -26,6 +26,7 @@ fn test_hus_file_load() {
             },
             name: "Dark Blue".to_string(),
             code: "HUS:13".to_string(),
+            manufacturer: None,
             attributes: BTreeMap::new(),
         })
     );
@@ -80,6 +81,7 @@ fn check_star_file_load(data: &[u8]) -> Pattern {
             },
             name: "Dark Blue".to_string(),
             code: "HUS:13".to_string(),
+            manufacturer: None,
             attributes: BTreeMap::new(),
         })
     );
