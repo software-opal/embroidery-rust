@@ -14,7 +14,7 @@ impl PatternReader for Vp4PatternReader {
         Ok(buf == MAGIC_BYTES)
     }
 
-    fn read_pattern(&self, item: &mut dyn Read) -> Result<Pattern, ReadError> {
+    fn read_pattern(&self, _item: &mut dyn Read) -> Result<Pattern, ReadError> {
         Err(ReadError::invalid_format("AAA"))
     }
 }

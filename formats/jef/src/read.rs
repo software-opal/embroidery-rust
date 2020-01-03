@@ -22,7 +22,7 @@ impl PatternReader for JefPatternReader {
 
     fn read_pattern(&self, item: &mut dyn Read) -> Result<Pattern, ReadError> {
         // Read the header
-        let header = PatternHeader::build(item)?;
+        let _header = PatternHeader::build(item)?;
         unimplemented!();
         // let threads = read_threads(&header, item)?;
         // let attributes = read_attributes(&header, item)?;
