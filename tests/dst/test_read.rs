@@ -10,7 +10,7 @@ fn test_file_load() {
 
     let pattern = loader.read_pattern(&mut data).unwrap();
     assert_eq!(pattern.name, "OSHLogo");
-    assert_eq!(pattern.attributes, vec![PatternAttribute::Title("OSHLogo".to_string())],);
+    assert_eq!(pattern.attributes, vec![PatternAttribute::Title("OSHLogo".to_owned())],);
     assert_eq!(pattern.color_groups.len(), 3);
 
     {
