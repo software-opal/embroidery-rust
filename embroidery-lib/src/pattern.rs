@@ -1,6 +1,7 @@
 use std::{f64, iter::Iterator};
 
 use crate::stitch::{ColorGroup, Stitch};
+use crate::transforms::{RemoveDuplicateStitches, SplitLongStitches};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[allow(clippy::module_name_repetitions)]
@@ -39,5 +40,30 @@ impl Pattern {
         } else {
             (min_x, min_y, max_x, max_y)
         }
+    }
+}
+
+impl RemoveDuplicateStitches for Pattern {
+    fn remove_duplicate_stitches(self) -> Self {
+        return Pattern {
+            color_groups: self
+                .color_groups
+                .into_iter()
+                .map(|cg| cg.remove_duplicate_stitches())
+                .collect(),
+            ..self
+        };
+    }
+}
+impl SplitLongStitches for Pattern {
+    fn split_stitches(self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Self {
+        return Pattern {
+            color_groups: self
+                .color_groups
+                .into_iter()
+                .map(|cg| cg.split_stitches(min_x, max_x, min_y, max_y))
+                .collect(),
+            ..self
+        };
     }
 }

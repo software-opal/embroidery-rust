@@ -14,6 +14,7 @@ mod str_util;
 
 pub mod errors;
 pub mod format;
+pub mod transforms;
 
 pub use crate::collection::PatternCollection;
 pub use crate::colors::Color;
