@@ -51,7 +51,7 @@ impl From<EmbError> for Error {
             EmbError::Read(e, ctx) => Error::EmbRead(e.set_context(ctx)),
             EmbError::Write(e, ctx) => Error::EmbWrite(e.set_context(ctx)),
             // We loose the context here.
-            EmbError::Standard(e, ctx) => e.into(),
+            EmbError::Standard(e, _ctx) => e.into(),
         }
     }
 }
