@@ -9,7 +9,7 @@ pub mod read;
 pub mod write;
 
 pub trait ErrorWithContext {
-    fn context<'a>(&'a self) -> Vec<String>;
+    fn context(&self) -> Vec<String>;
     fn with_additional_context<S>(self, extra: S) -> Self
     where
         S: Into<String>;
@@ -18,9 +18,9 @@ pub trait ErrorWithContext {
     fn context_string(&self) -> String {
         let ctx = self.context();
         if ctx.is_empty() {
-            return "".to_string();
+            "".to_string()
         } else {
-            return format!("\nAdditional error context(deepest first):\n{}", ctx.join("\n"));
+            format!("\nAdditional error context(deepest first):\n{}", ctx.join("\n"))
         }
     }
     fn set_context<I>(self, iter: I) -> Self
@@ -101,7 +101,7 @@ impl<T: Into<StdError>> From<T> for Error {
     }
 }
 impl ErrorWithContext for Error {
-    fn context<'a>(&'a self) -> Vec<String> {
+    fn context(&self) -> Vec<String> {
         match self {
             Self::Read(_, c) => {
                 // let ictx = e.context()

@@ -28,6 +28,7 @@ pub struct PatternHeader {
 }
 
 impl PatternHeader {
+    #[allow(clippy::cognitive_complexity)]
     pub fn build(file: &mut dyn Read) -> ReadResult<Self> {
         let stitch_abs_offset = read_int!(file, u32, LittleEndian)?;
         let format_flags = read_int!(file, u32, LittleEndian)?; /* TODO: find out what this means */

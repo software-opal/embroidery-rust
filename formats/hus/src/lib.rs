@@ -8,10 +8,10 @@ use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 pub use read::HusVipPatternReader;
 pub use write::HusVipPatternWriter;
 
-const HUS_NAME: &'static str = "hus";
-const HUS_EXTENSIONS: [&'static str; 1] = ["hus"];
-const VIP_NAME: &'static str = "vip";
-const VIP_EXTENSIONS: [&'static str; 1] = ["vip"];
+const HUS_NAME: &str = "hus";
+const HUS_EXTENSIONS: [&str; 1] = ["hus"];
+const VIP_NAME: &str = "vip";
+const VIP_EXTENSIONS: [&str; 1] = ["vip"];
 
 #[derive(Default)]
 pub struct HusPatternFormat {}

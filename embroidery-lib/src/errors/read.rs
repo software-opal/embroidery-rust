@@ -18,13 +18,13 @@ impl Error {
     where
         S: Into<String>,
     {
-        return Self::InvalidFormat(msg.into(), vec![]);
+        Self::InvalidFormat(msg.into(), vec![])
     }
     pub fn unexpected_eof<S>(msg: S, err: std::io::Error) -> Self
     where
         S: Into<String>,
     {
-        return Self::UnexpectedEof(msg.into(), err, vec![]);
+        Self::UnexpectedEof(msg.into(), err, vec![])
     }
 }
 
@@ -43,7 +43,7 @@ impl<T: Into<StdError>> From<T> for Error {
 }
 
 impl ErrorWithContext for Error {
-    fn context<'a>(&'a self) -> Vec<String> {
+    fn context(&self) -> Vec<String> {
         match self {
             Self::InvalidFormat(_, c) => c.clone(),
             Self::UnexpectedEof(_, _, c) => c.clone(),

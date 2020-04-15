@@ -7,8 +7,8 @@ use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 pub use self::read::DstPatternReader;
 pub use self::write::DstPatternWriter;
 
-const NAME: &'static str = "dst";
-const EXTENSIONS: [&'static str; 1] = ["dst"];
+const NAME: &str = "dst";
+const EXTENSIONS: [&str; 1] = ["dst"];
 
 #[derive(Default)]
 pub struct DstPatternFormat {}

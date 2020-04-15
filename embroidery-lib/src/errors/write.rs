@@ -18,26 +18,26 @@ pub enum Error {
 
 impl Error {
     pub fn unsupported_stitch(stitch: Stitch, idx: Option<usize>) -> Self {
-        return Self::UnsupportedStitch {
+        Self::UnsupportedStitch {
             stitch,
             idx,
             ctx: vec![],
-        };
+        }
     }
     pub fn unsupported_stitch_msg<S>(stitch: Stitch, idx: Option<usize>, msg: S) -> Self
     where
         S: Into<String>,
     {
-        return Self::UnsupportedStitch {
+        Self::UnsupportedStitch {
             stitch,
             idx,
             ctx: vec![msg.into()],
-        };
+        }
     }
 }
 
 impl ErrorWithContext for Error {
-    fn context<'a>(&'a self) -> Vec<String> {
+    fn context(&self) -> Vec<String> {
         match self {
             Self::UnsupportedStitch { stitch: _, idx: _, ctx } => ctx.clone(),
             Self::Std(_, c) => c.clone(),

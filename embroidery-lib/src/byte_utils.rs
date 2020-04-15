@@ -282,10 +282,11 @@ mod tests {
         assert_eq!(read_exact!(&mut reader, vec![_; len]).unwrap(), vec![0, 1]);
     }
     #[test]
+    #[allow(clippy::cognitive_complexity)]
     fn test_read_int() {
         use byteorder::BigEndian;
 
-        // Should need (31 * 2) for the fixed sized ints and at most (16*2) for the *size ints
+        // Should need (31 * 2) for the fixed sized integers and at most (16*2) for the *size integers
         // Which is 94; but use 200 just to be safe
         let mut reader = &([0_u8; 200])[..];
 
