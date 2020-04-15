@@ -11,7 +11,6 @@ A stitch represents the x,y coordinates in millimeters.
 */
 
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::fmt::Display;
 
 use crate::colors::Color;
@@ -169,7 +168,11 @@ impl SplitLongStitches for StitchGroup {
     fn split_stitches(self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Self {
         // This function does not behave well when the values it is working with are close to the
         //  limits of floating point numbers.
-        assert!(min_x < 0.0 && min_y < 0.0 && max_x > 0.0 && max_y > 0.0, "Bounds are not valid {:?}", (min_x, max_x, min_y, max_y));
+        assert!(
+            min_x < 0.0 && min_y < 0.0 && max_x > 0.0 && max_y > 0.0,
+            "Bounds are not valid {:?}",
+            (min_x, max_x, min_y, max_y)
+        );
 
         let mut stitches = Vec::with_capacity(self.stitches.len());
         if self.stitches.is_empty() {
@@ -302,10 +305,7 @@ mod tests {
     }
     #[test]
     fn split_stitches_large_jump() {
-        let s = StitchGroup::new(vec![
-            Stitch::new(0.0, 0.0),
-            Stitch::new(50.0, -50.0),
-        ]);
+        let s = StitchGroup::new(vec![Stitch::new(0.0, 0.0), Stitch::new(50.0, -50.0)]);
         let s = s.split_stitches(-10.0, 10.0, -10.0, 10.0);
         assert_eq!(
             s.stitches,
@@ -321,10 +321,7 @@ mod tests {
     }
     #[test]
     fn split_stitches_asymetric_bounds() {
-        let s = StitchGroup::new(vec![
-            Stitch::new(0.0, 0.0),
-            Stitch::new(50.0, -50.0),
-        ]);
+        let s = StitchGroup::new(vec![Stitch::new(0.0, 0.0), Stitch::new(50.0, -50.0)]);
         let s = s.split_stitches(-1.0, 10.0, -10.0, 1.0);
         assert_eq!(
             s.stitches,
@@ -361,7 +358,6 @@ mod tests {
     }
 }
 
-
 #[cfg(test)]
 mod proptests {
     use super::*;
@@ -380,7 +376,11 @@ mod proptests {
     }
     prop_compose! {
         fn stitch_group_strategy(max_length: usize)
-                                (stitches in prop::collection::vec(stitch_strategy(), 0..max_length), cut: bool, trim: bool)
+                                (
+                                    stitches in prop::collection::vec(stitch_strategy(), 0..max_length),
+                                    cut: bool,
+                                    trim: bool
+                                )
                                 -> StitchGroup {
             return StitchGroup {
                 stitches, cut, trim
@@ -389,7 +389,13 @@ mod proptests {
     }
     proptest! {
         #[test]
-        fn split_stitches_proptest(sg in stitch_group_strategy(100), min_x in -STITCH_MAX..0.0, max_x in 0.0..STITCH_MAX, min_y in -STITCH_MAX..0.0, max_y in 0.0..STITCH_MAX) {
+        fn split_stitches_proptest(
+            sg in stitch_group_strategy(100),
+            min_x in -STITCH_MAX..0.0,
+            max_x in 0.0..STITCH_MAX,
+            min_y in -STITCH_MAX..0.0,
+            max_y in 0.0..STITCH_MAX
+        ) {
             prop_assume!(min_x < 0.0 && min_y < 0.0 && max_x > 0.0 && max_y > 0.0);
             let new_sg = sg.clone().split_stitches(min_x, max_x, min_y, max_y);
             prop_assert!(new_sg.stitches.len() >= sg.stitches.len())
