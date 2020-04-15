@@ -1,28 +1,49 @@
 mod colors;
 mod header;
 mod read;
+mod write;
 
 use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
 pub use read::HusVipPatternReader;
+pub use write::HusVipPatternWriter;
 
-const NAME: &'static str = "hus/vip";
-const EXTENSIONS: [&'static str; 2] = ["hus", "vip"];
+const HUS_NAME: &'static str = "hus";
+const HUS_EXTENSIONS: [&'static str; 1] = ["hus"];
+const VIP_NAME: &'static str = "vip";
+const VIP_EXTENSIONS: [&'static str; 1] = ["vip"];
 
 #[derive(Default)]
-pub struct HusVipPatternFormat {}
+pub struct HusPatternFormat {}
 
-impl PatternFormat for HusVipPatternFormat {
+impl PatternFormat for HusPatternFormat {
     fn name<'a>(&self) -> &'a str {
-        NAME
+        HUS_NAME
     }
     fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
-        &EXTENSIONS
+        &HUS_EXTENSIONS
     }
     fn reader(&self) -> Option<Box<dyn PatternReader>> {
         Some(Box::from(HusVipPatternReader::default()))
     }
     fn writer(&self) -> Option<Box<dyn PatternWriter>> {
-        None
+        Some(Box::from(HusVipPatternWriter::hus()))
+    }
+}
+#[derive(Default)]
+pub struct VipPatternFormat {}
+
+impl PatternFormat for VipPatternFormat {
+    fn name<'a>(&self) -> &'a str {
+        VIP_NAME
+    }
+    fn extensions<'a, 'b>(&self) -> &'a [&'b str] {
+        &VIP_EXTENSIONS
+    }
+    fn reader(&self) -> Option<Box<dyn PatternReader>> {
+        Some(Box::from(HusVipPatternReader::default()))
+    }
+    fn writer(&self) -> Option<Box<dyn PatternWriter>> {
+        Some(Box::from(HusVipPatternWriter::vip()))
     }
 }
