@@ -4,9 +4,9 @@ use embroidery_lib::prelude::*;
 
 use std::io::Read;
 
-mod header;
+use crate::common::{header, util};
+
 mod thread;
-mod util;
 
 #[derive(Default)]
 pub struct Vp3PatternReader {}

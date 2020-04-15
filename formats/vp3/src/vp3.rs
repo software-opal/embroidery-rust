@@ -6,8 +6,8 @@ use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 pub use self::read::Vp3PatternReader;
 // pub use self::write::Vp3PatternWriter;
 
-const NAME: &'static str = "vp3";
-const EXTENSIONS: [&'static str; 1] = ["vp3"];
+const NAME: &str = "vp3";
+const EXTENSIONS: [&str; 1] = ["vp3"];
 
 #[derive(Default)]
 pub struct Vp3PatternFormat {}

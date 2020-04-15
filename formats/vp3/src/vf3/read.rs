@@ -24,7 +24,7 @@ impl CollectionReader for Vf3CollectionReader {
         // Read the header
         let _iter = ReadByteIterator::new(file);
         // TODO: This
-        return Err(ReadError::invalid_format("oops"));
+        Err(ReadError::invalid_format("oops"))
     }
 }
 

@@ -44,6 +44,7 @@ impl Vp3ThreadHeader {
     }
 }
 
+#[allow(clippy::cognitive_complexity)]
 pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, ReadError> {
     read_exact_magic!(reader, [0x00, 0x05, 0x00])?;
     let _next_color_offset_from_top_of_color = read_int!(reader, u32, BigEndian)?;
@@ -148,7 +149,7 @@ pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Resu
     }
     if !stitches.is_empty() {
         stitch_groups.push(StitchGroup {
-            stitches: stitches,
+            stitches,
             trim: false,
             cut: false,
         });

@@ -8,9 +8,16 @@ use std::io::Read;
 
 use super::util::read_wide_string_field;
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Vp3FileType {
+    Pattern,
+    Font,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Vp3Header {
     pub software_vendor_string: String,
+    pub file_type: Vp3FileType,
     pub bytes_remaining: u32,
     pub file_comment_string: String,
     pub hoop: Vp3Hoop,
@@ -47,7 +54,19 @@ pub fn read_header<'a>(ub_reader: &'a mut dyn Read) -> Result<(Vp3Header, std::i
     }
 
     let software_vendor_string = read_wide_string_field(ub_reader, "software_vendor_string")?;
-    read_exact_magic!(ub_reader, [0x00, 0x02, 0x00])?;
+
+    let mut file_type_magics = [0_u8; 3];
+    ub_reader.read_exact(&mut file_type_magics)?;
+    let file_type = match file_type_magics {
+        [0x00, 0x02, 0x00] => Vp3FileType::Pattern,
+        [0x00, 0x1D, 0x00] => Vp3FileType::Font,
+        other => {
+            return Err(ReadError::invalid_format(format!(
+                "Incorrect file type magic bytes {:?}",
+                other
+            )))
+        },
+    };
     let bytes_remaining = read_int!(ub_reader, u32, BigEndian)?;
 
     let mut reader = ub_reader.take(bytes_remaining.into());
@@ -74,6 +93,7 @@ pub fn read_header<'a>(ub_reader: &'a mut dyn Read) -> Result<(Vp3Header, std::i
     Ok((
         Vp3Header {
             software_vendor_string,
+            file_type,
             bytes_remaining,
             file_comment_string,
             hoop,
@@ -84,6 +104,7 @@ pub fn read_header<'a>(ub_reader: &'a mut dyn Read) -> Result<(Vp3Header, std::i
     ))
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn read_hoop(reader: &mut dyn Read) -> Result<Vp3Hoop, ReadError> {
     let left = read_int!(reader, i32, BigEndian)?;
     let top = read_int!(reader, i32, BigEndian)?;
@@ -113,7 +134,7 @@ fn read_hoop(reader: &mut dyn Read) -> Result<Vp3Hoop, ReadError> {
     let width = read_int!(reader, i32, BigEndian)?;
     let height = read_int!(reader, i32, BigEndian)?;
 
-    return Ok(Vp3Hoop {
+    Ok(Vp3Hoop {
         right,
         bottom,
         left,
@@ -129,7 +150,7 @@ fn read_hoop(reader: &mut dyn Read) -> Result<Vp3Hoop, ReadError> {
         top2,
         width,
         height,
-    });
+    })
 }
 
 #[cfg(test)]
@@ -163,6 +184,7 @@ mod tests {
             header,
             Vp3Header {
                 software_vendor_string: "Produced by     Software Ltd".to_string(),
+                file_type: Vp3FileType::Pattern,
                 bytes_remaining: 55_361, /* 0x00_00_D8_41 */
                 file_comment_string: "".to_string(),
                 another_software_vendor_string: "Produced by     Software Ltd".to_string(),

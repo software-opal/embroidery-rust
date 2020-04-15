@@ -4,8 +4,8 @@ use embroidery_lib::format::{CollectionFormat, CollectionReader, CollectionWrite
 
 pub use self::read::Vf3CollectionReader;
 
-const NAME: &'static str = "vf3";
-const EXTENSIONS: [&'static str; 1] = ["vf3"];
+const NAME: &str = "vf3";
+const EXTENSIONS: [&str; 1] = ["vf3"];
 
 #[derive(Default)]
 pub struct Vf3CollectionFormat {}
