@@ -1,4 +1,3 @@
-use palette;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

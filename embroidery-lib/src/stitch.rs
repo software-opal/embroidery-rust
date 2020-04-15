@@ -42,7 +42,7 @@ impl Thread {
     }
 }
 
-/// Represents mm from an arbitary (0, 0) where positive values move up and right
+/// Represents mm from an arbitrary (0, 0) where positive values move up and right
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Stitch {
     pub x: f64,
@@ -148,7 +148,7 @@ impl RemoveDuplicateStitches for StitchGroup {
     fn remove_duplicate_stitches(self) -> Self {
         let mut stitches = Vec::with_capacity(self.stitches.len());
         if self.stitches.is_empty() {
-            return self;
+            self
         } else {
             let mut stitch_iter = self.stitches.into_iter();
             // Unchecked unwrap as we've already checked that the list isn't empty
@@ -165,6 +165,7 @@ impl RemoveDuplicateStitches for StitchGroup {
     }
 }
 impl SplitLongStitches for StitchGroup {
+    #[allow(clippy::float_cmp)]
     fn split_stitches(self, min_x: f64, max_x: f64, min_y: f64, max_y: f64) -> Self {
         // This function does not behave well when the values it is working with are close to the
         //  limits of floating point numbers.
@@ -176,7 +177,7 @@ impl SplitLongStitches for StitchGroup {
 
         let mut stitches = Vec::with_capacity(self.stitches.len());
         if self.stitches.is_empty() {
-            return self;
+            self
         } else {
             let mut stitch_iter = self.stitches.into_iter().enumerate();
             // Unchecked unwrap as we've already checked that the list isn't empty
@@ -320,7 +321,7 @@ mod tests {
         );
     }
     #[test]
-    fn split_stitches_asymetric_bounds() {
+    fn split_stitches_asymmetric_bounds() {
         let s = StitchGroup::new(vec![Stitch::new(0.0, 0.0), Stitch::new(50.0, -50.0)]);
         let s = s.split_stitches(-1.0, 10.0, -10.0, 1.0);
         assert_eq!(
@@ -371,7 +372,7 @@ mod proptests {
             fn stitch_strategy()
                               (x in -STITCH_MAX..STITCH_MAX, y in -STITCH_MAX..STITCH_MAX)
                               -> Stitch {
-                return Stitch {x, y}
+                Stitch {x, y}
             }
     }
     prop_compose! {
@@ -382,7 +383,7 @@ mod proptests {
                                     trim: bool
                                 )
                                 -> StitchGroup {
-            return StitchGroup {
+            StitchGroup {
                 stitches, cut, trim
             }
         }

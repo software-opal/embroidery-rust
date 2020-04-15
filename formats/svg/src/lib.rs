@@ -4,8 +4,8 @@ use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
 pub use self::write::SvgPatternWriter;
 
-const NAME: &'static str = "svg";
-const EXTENSIONS: [&'static str; 1] = ["svg"];
+const NAME: &str = "svg";
+const EXTENSIONS: [&str; 1] = ["svg"];
 
 #[derive(Default)]
 pub struct SvgPatternFormat {}

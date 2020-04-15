@@ -6,8 +6,8 @@ use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 // pub use self::read::CsvPatternReader;
 pub use self::write::CsvPatternWriter;
 
-const NAME: &'static str = "csv";
-const EXTENSIONS: [&'static str; 1] = ["csv"];
+const NAME: &str = "csv";
+const EXTENSIONS: [&str; 1] = ["csv"];
 
 #[derive(Default)]
 pub struct CsvPatternFormat {}

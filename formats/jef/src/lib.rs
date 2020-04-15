@@ -7,8 +7,8 @@ pub use read::JefPatternReader;
 
 use embroidery_lib::format::{PatternFormat, PatternReader, PatternWriter};
 
-const NAME: &'static str = "jef";
-const EXTENSIONS: [&'static str; 1] = ["jef"];
+const NAME: &str = "jef";
+const EXTENSIONS: [&str; 1] = ["jef"];
 
 #[derive(Default)]
 pub struct JefPatternFormat {}
