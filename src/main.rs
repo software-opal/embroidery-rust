@@ -23,12 +23,12 @@ use std::env;
 fn main() -> Result<(), Error> {
     TermLogger::init(
         LevelFilter::Debug,
-        Config {
-            time: None,
-            target: None,
-            location: Some(Level::Error),
-            ..Config::default()
-        },
+        ConfigBuilder::new()
+            .set_time_level(LevelFilter::Off)
+            .set_target_level(LevelFilter::Off)
+            .set_location_level(LevelFilter::Error)
+            .build(),
+        TerminalMode::Mixed,
     )?;
 
     let loader_unloaders = get_all();

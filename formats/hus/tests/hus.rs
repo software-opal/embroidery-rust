@@ -1,8 +1,5 @@
-use difference::{Changeset, Difference};
-
 use embroidery_lib::format::PatternReader;
 use embroidery_lib::prelude::*;
-use embroidery_lib::transforms::RemoveDuplicateStitches;
 
 use embroidery_fmt_hus::HusVipPatternReader;
 
