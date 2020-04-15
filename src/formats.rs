@@ -13,6 +13,7 @@ pub fn get_all() -> Vec<Box<dyn PatternFormat>> {
         Box::new(HusPatternFormat::default()),
         Box::new(SvgPatternFormat::default()),
         Box::new(VipPatternFormat::default()),
+        Box::new(Vp3PatternFormat::default()),
     ]
 }
 pub fn get_readers() -> Vec<Box<dyn PatternReader>> {
