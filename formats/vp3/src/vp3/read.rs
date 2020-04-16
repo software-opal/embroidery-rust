@@ -13,11 +13,15 @@ pub struct Vp3PatternReader {}
 
 impl PatternReader for Vp3PatternReader {
     fn is_loadable(&self, reader: &mut dyn Read) -> Result<bool, ReadError> {
-        header::read_header(reader)?;
+        header::read_header(reader, Some(header::FileType::Pattern))?;
         Ok(false)
     }
     fn read_pattern(&self, ub_reader: &mut dyn Read) -> Result<Pattern, ReadError> {
-        let (header, mut reader) = header::read_header(ub_reader)?;
+        let (_common_header, header, mut reader) = header::read_header(ub_reader, Some(header::FileType::Pattern))?;
+        let header = match header {
+            header::Header::Pattern(head) => head,
+            _ => unreachable!(),
+        };
         let mut cgs = Vec::with_capacity(header.number_of_threads);
         for i in 0..header.number_of_threads {
             let thread_header = maybe_read_with_context!(

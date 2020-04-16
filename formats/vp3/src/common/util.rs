@@ -20,11 +20,12 @@ pub fn read_wide_string_field(reader: &mut dyn Read, name: &str) -> Result<Strin
     }
     Ok(String::from_utf16_lossy(&utf16be_codepoints))
 }
-pub fn read_ascii_string_field(reader: &mut dyn Read) -> Result<String, ReadError> {
+pub fn read_ascii_string_field(reader: &mut dyn Read, name: &str) -> Result<String, ReadError> {
     let len: usize = read_int!(reader, u16, BigEndian)?.into();
     let utf8_codepoints = maybe_read_with_context!(
         read_exact!(reader, vec![_; len]),
-        "Attempting to read ASCII string of length {:X}",
+        "Attempting to read {} as an ASCII string of length {:X}",
+        name,
         len
     )?;
     Ok(String::from_utf8_lossy(&utf8_codepoints).to_string())

@@ -61,9 +61,9 @@ pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, Read
         color_table.push(table);
     }
 
-    let thread_code = read_ascii_string_field(reader)?;
-    let thread_name = read_ascii_string_field(reader)?;
-    let thread_manufacturer = read_ascii_string_field(reader)?;
+    let thread_code = read_ascii_string_field(reader, "thread_code")?;
+    let thread_name = read_ascii_string_field(reader, "thread_name")?;
+    let thread_manufacturer = read_ascii_string_field(reader, "thread_manufacturer")?;
 
     let x_offset_b = read_int!(reader, i32, BigEndian)?;
     let y_offset_b = read_int!(reader, i32, BigEndian)?;
