@@ -80,7 +80,7 @@ impl From<ReadError> for Error {
             err => {
                 let c = err.context();
                 Error::Read(err.without_context(), c)
-            },
+            }
         }
     }
 }
@@ -91,7 +91,7 @@ impl From<WriteError> for Error {
             err => {
                 let c = err.context();
                 Error::Write(err.without_context(), c)
-            },
+            }
         }
     }
 }
@@ -110,7 +110,7 @@ impl ErrorWithContext for Error {
                 ctx.extend_from_slice(&ictx);
                 ctx.extend_from_slice(c);
                 ctx
-            },
+            }
             Self::Write(_, c) => {
                 // let ictx = e.context()
                 let ictx = vec![];
@@ -118,7 +118,7 @@ impl ErrorWithContext for Error {
                 ctx.extend_from_slice(&ictx);
                 ctx.extend_from_slice(c);
                 ctx
-            },
+            }
             Self::Standard(_, c) => c.clone(),
         }
     }
@@ -130,15 +130,15 @@ impl ErrorWithContext for Error {
             Self::Read(e, mut c) => {
                 c.push(extra.into());
                 Self::Read(e, c)
-            },
+            }
             Self::Write(e, mut c) => {
                 c.push(extra.into());
                 Self::Write(e, c)
-            },
+            }
             Self::Standard(e, mut c) => {
                 c.push(extra.into());
                 Self::Standard(e, c)
-            },
+            }
         }
     }
     fn without_context(self) -> Self {
@@ -147,6 +147,32 @@ impl ErrorWithContext for Error {
             Self::Write(e, _) => Self::Write(e, vec![]),
             Self::Standard(e, _) => Self::Standard(e, vec![]),
         }
+    }
+}
+
+#[inline]
+pub fn add_context<T, E, F, S>(result: result::Result<T, E>, ctx: F) -> result::Result<T, E>
+where
+    E: ErrorWithContext,
+    S: Into<String>,
+    F: FnOnce() -> S,
+{
+    match result {
+        Ok(r) => Ok(r),
+        Err(e) => Err(e.with_additional_context(ctx())),
+    }
+}
+#[inline]
+pub fn add_context_fn<T, E, S, EF, CF>(func: EF, ctx: CF) -> result::Result<T, E>
+where
+    E: ErrorWithContext,
+    EF: FnOnce() -> result::Result<T, E>,
+    S: Into<String>,
+    CF: FnOnce() -> S,
+{
+    match func() {
+        Ok(r) => Ok(r),
+        Err(e) => Err(e.with_additional_context(ctx())),
     }
 }
 

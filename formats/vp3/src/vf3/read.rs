@@ -2,7 +2,11 @@ use std::io::Read;
 
 use embroidery_lib::format::CollectionReader;
 use embroidery_lib::prelude::*;
-use embroidery_lib::utils::ReadByteIterator;
+
+use crate::common::header::{read_header, FileType, Header};
+use crate::vf3::read::pattern::read_font_pattern;
+
+mod pattern;
 
 pub struct Vf3CollectionReader {}
 
@@ -13,16 +17,24 @@ impl Default for Vf3CollectionReader {
 }
 
 impl CollectionReader for Vf3CollectionReader {
-    fn is_loadable(&self, item: &mut dyn Read) -> Result<bool, ReadError> {
+    fn is_loadable(&self, file: &mut dyn Read) -> Result<bool, ReadError> {
         // Load the header
-        // Check the last byte of the file? maybe
-        let _iter = ReadByteIterator::new(item);
-        Ok(false)
+        match read_header(file, Some(FileType::Font)) {
+            Ok(_) => Ok(true),
+            Err(ReadError::InvalidFormat(_, _)) => Ok(false),
+            Err(ReadError::UnexpectedEof(_, _, _)) => Ok(false),
+            Err(other) => Err(other),
+        }
     }
 
     fn read_pattern(&self, file: &mut dyn Read) -> Result<PatternCollection, ReadError> {
-        // Read the header
-        let _iter = ReadByteIterator::new(file);
+        let (_common_header, header, _) = read_header(file, Some(FileType::Font))?;
+        let header = match header {
+            Header::Font(font_header) => font_header,
+            _ => unreachable!(),
+        };
+        read_font_pattern(file, &header.character_offsets)?;
+
         // TODO: This
         Err(ReadError::invalid_format("oops"))
     }

@@ -39,7 +39,7 @@ impl Error {
 impl ErrorWithContext for Error {
     fn context(&self) -> Vec<String> {
         match self {
-            Self::UnsupportedStitch { stitch: _, idx: _, ctx } => ctx.clone(),
+            Self::UnsupportedStitch { ctx, .. } => ctx.clone(),
             Self::Std(_, c) => c.clone(),
         }
     }
@@ -51,16 +51,16 @@ impl ErrorWithContext for Error {
             Self::UnsupportedStitch { stitch, idx, mut ctx } => {
                 ctx.push(extra.into());
                 Self::UnsupportedStitch { stitch, idx, ctx }
-            },
+            }
             Self::Std(e, mut c) => {
                 c.push(extra.into());
                 Self::Std(e, c)
-            },
+            }
         }
     }
     fn without_context(self) -> Self {
         match self {
-            Self::UnsupportedStitch { stitch, idx, ctx: _ } => Self::UnsupportedStitch {
+            Self::UnsupportedStitch { stitch, idx, .. } => Self::UnsupportedStitch {
                 stitch,
                 idx,
                 ctx: vec![],
