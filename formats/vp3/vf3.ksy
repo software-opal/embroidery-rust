@@ -7,6 +7,10 @@ seq:
     type: header
   - id: character_set
     type: character_set
+  - id: pattern
+    type: character_pattern
+    repeat: expr
+    repeat-expr: character_set.count
 types:
   header:
     seq:
@@ -76,7 +80,7 @@ types:
       thread_wrapper:
         seq:
           - id: color_magic
-            contents: [0, 5, 0]
+            contents: [0, 0x05, 0]
           - id: thread_len
             type: u4
           - id: thread
@@ -129,9 +133,9 @@ types:
             type: u1
           - id: y
             type: u1
-          # - id: ext
-          # type: stitch_ext
-          # if: x == 0x80 and y == 0x01
+          - id: ext
+            type: stitch_ext
+            if: x == 0x80 and y == 0x01
       stitch_ext:
         seq:
           # Note the X and Y coordinates are 2s compliment unless equal to 0x8000,

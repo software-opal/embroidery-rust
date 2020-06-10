@@ -36,8 +36,7 @@ pub fn read_font_pattern(reader: &mut dyn Read, character_offsets: &[(char, u32)
                     )));
                 }
                 let constrained_reader = reader.take(this_char_bytes.unwrap_or(std::u64::MAX));
-
-                Ok(())
+                read_char_pattern(&constrained_reader)
             },
             || format!("Error ocurred whilst processing character {:?} at index {}.", chr, i),
         )?;
