@@ -181,7 +181,7 @@ impl StitchInformation {
                     ((val >> 8) & 0xFF) as u8,
                     option_bits | (val & 0xFF) as u8,
                 ])
-            }
+            },
             StitchInformation::End => Some([0x00, 0x00, 0xF3]),
         }
     }

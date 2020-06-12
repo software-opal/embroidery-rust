@@ -163,7 +163,7 @@ mod tests {
                 font_italic: false,
                 font_bold: false,
                 font_bounding_width: 34,
-                font_bounding_height    : 35,
+                font_bounding_height: 35,
                 character_offsets: vec![
                     (' ', 0),
                     ('!', 136),

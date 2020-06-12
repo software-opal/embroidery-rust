@@ -216,14 +216,14 @@ fn read_stitches(item: &mut dyn Iterator<Item = u8>) -> Result<Vec<ColorGroup>, 
                     debug!("Irregular {:?} {:?} {:?}", cx, cy, stitch_type);
                     last_irregulars.push((cx, cy, stitch_type));
                 }
-            }
+            },
             ParseResult::Some(StitchInformation::End) => {
                 break;
-            }
+            },
             ParseResult::Exhausted => {
                 break;
-            }
-            ParseResult::Skip => {}
+            },
+            ParseResult::Skip => {},
         }
     }
     if !stitches.is_empty() {

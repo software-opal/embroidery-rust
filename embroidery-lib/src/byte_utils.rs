@@ -44,11 +44,11 @@ impl<T: Read + Sized> Iterator for ReadByteIterator<T> {
                     self.error = Some(error);
                     self.close();
                     None
-                }
+                },
                 None => {
                     self.close();
                     None
-                }
+                },
             }
         }
     }
@@ -80,7 +80,7 @@ macro_rules! read_exact_magic {
                     // Return the read value in case the caller wants it.
                     Ok(real)
                 }
-            }
+            },
         }
     }};
 }

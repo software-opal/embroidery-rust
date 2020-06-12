@@ -51,11 +51,11 @@ impl ErrorWithContext for Error {
             Self::UnsupportedStitch { stitch, idx, mut ctx } => {
                 ctx.push(extra.into());
                 Self::UnsupportedStitch { stitch, idx, ctx }
-            }
+            },
             Self::Std(e, mut c) => {
                 c.push(extra.into());
                 Self::Std(e, c)
-            }
+            },
         }
     }
     fn without_context(self) -> Self {

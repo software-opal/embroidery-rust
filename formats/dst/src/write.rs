@@ -61,12 +61,15 @@ fn build_header(pattern: &Pattern, dst_stitches: &[StitchInformation]) -> Result
     let stitch_count = dst_stitches.len();
     let (minx, miny, maxx, maxy) = pattern.get_bounds();
 
-    let title = pattern.name.to_string();
+    let title = char_truncate(&c_trim(&pattern.name), 17);
 
-    write!(data, "LA:{: <17}\r", char_truncate(&c_trim(&title), 17))?;
+    let title_padding: String = std::iter::repeat(' ').take(17 - title.bytes().len()).collect();
+
+    // Cannot use `{: >17}` as it does not handle multi-byte characters in the way we need to
+    write!(data, "LA:{}{}\r", title, title_padding)?;
     write!(data, "ST:{: >7}\r", stitch_count)?;
     // `CO` represents the number of color changes.
-    write!(data, "CO:{: >3}\r", color_count - 1)?;
+    write!(data, "CO:{: >3}\r", color_count.saturating_sub(1))?;
     write!(data, "+X:{: <5}\r", (10. * maxx) as i64)?;
     write!(data, "-X:{: <5}\r", (10. * minx) as i64)?;
     write!(data, "+Y:{: <5}\r", (10. * maxy) as i64)?;
@@ -241,4 +244,23 @@ fn generate_cut() -> Vec<StitchInformation> {
         StitchInformation::Move(-1, 0, StitchType::Jump),
         StitchInformation::Move(0, 0, StitchType::Jump),
     ]
+}
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_build_header() {
+        let result = build_header(
+            &Pattern {
+                name: "Ä".to_owned(),
+                attributes: vec![],
+                color_groups: vec![],
+            },
+            &[],
+        )
+        .unwrap();
+
+        assert_eq!("LA:Ä               \rST:    314\rCO:  0\r+X:46   \r-X:-46  \r+Y:-36  \r-Y:-169 \rAX:+0    \rAY:+0    \rMX:+0    \rMY:+0    \rPD:******\r\u{0}\u{0}\u{0}".bytes().collect(), res)
+    }
 }

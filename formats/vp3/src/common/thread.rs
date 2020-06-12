@@ -4,13 +4,13 @@ use embroidery_lib::prelude::*;
 use embroidery_lib::{maybe_read_with_context, read_exact_magic, read_int};
 
 use std::convert::TryInto;
-use std::io::Read;
+use std::io::{Read, Take};
 
 use super::util::read_ascii_string_field;
 
 #[derive(Debug, PartialEq)]
 pub struct Vp3ThreadHeader {
-    _next_color_offset_from_top_of_color: u32,
+    pub thread_length: u32,
     pub x_offset_a: i32,
     pub y_offset_a: i32,
     pub color: (u8, u8, u8),
@@ -44,26 +44,46 @@ impl Vp3ThreadHeader {
     }
 }
 
+pub fn read_threads(mut reader: &mut dyn Read, threads: usize) -> Result<Vec<ColorGroup>, ReadError> {
+    let mut cgs = Vec::with_capacity(threads);
+    for i in 0..threads {
+        let (mut thread_reader, thread_header) =
+            maybe_read_with_context!(read_thread_header(&mut reader), "Reading thread {} of {}", i, threads,)?;
+        let stitches = maybe_read_with_context!(
+            read_stitches(&mut thread_reader, &thread_header),
+            "Reading thread {} of {}",
+            i,
+            threads,
+        )?;
+        cgs.push(ColorGroup {
+            thread: Some(thread_header.to_thread()),
+            stitch_groups: stitches,
+        });
+    }
+    Ok(cgs)
+}
+
 #[allow(clippy::cognitive_complexity)]
-pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, ReadError> {
-    read_exact_magic!(reader, [0x00, 0x05, 0x00])?;
-    let _next_color_offset_from_top_of_color = read_int!(reader, u32, BigEndian)?;
+pub fn read_thread_header(ub_reader: &mut dyn Read) -> Result<(Take<&mut dyn Read>, Vp3ThreadHeader), ReadError> {
+    read_exact_magic!(ub_reader, [0x00, 0x05, 0x00])?;
+    let thread_length = read_int!(ub_reader, u32, BigEndian)?;
+    let mut reader = ub_reader.take(thread_length.into());
     let x_offset_a = read_int!(reader, i32, BigEndian)?;
     let y_offset_a = read_int!(reader, i32, BigEndian)?;
 
     let table_multiplier: usize = read_int!(reader, u8)?.into();
     let color = (read_int!(reader, u8)?, read_int!(reader, u8)?, read_int!(reader, u8)?);
     // Maybe colour table?
-    let mut color_table = Vec::with_capacity(table_multiplier);
+    let mut color_table = Vec::with_capacity(table_multiplier * 6);
     for _ in 0..table_multiplier {
         let mut table = [0_u8; 6];
         reader.read_exact(&mut table)?;
         color_table.push(table);
     }
 
-    let thread_code = read_ascii_string_field(reader, "thread_code")?;
-    let thread_name = read_ascii_string_field(reader, "thread_name")?;
-    let thread_manufacturer = read_ascii_string_field(reader, "thread_manufacturer")?;
+    let thread_code = read_ascii_string_field(&mut reader, "thread_code")?;
+    let thread_name = read_ascii_string_field(&mut reader, "thread_name")?;
+    let thread_manufacturer = read_ascii_string_field(&mut reader, "thread_manufacturer")?;
 
     let x_offset_b = read_int!(reader, i32, BigEndian)?;
     let y_offset_b = read_int!(reader, i32, BigEndian)?;
@@ -71,19 +91,22 @@ pub fn read_thread_header(reader: &mut dyn Read) -> Result<Vp3ThreadHeader, Read
     // A read_ascii_string_field with apparently constant values
     read_exact_magic!(reader, [0x00, 0x01, 0x00])?;
     let stitch_bytes = read_int!(reader, u32, BigEndian)?.try_into().unwrap();
-    Ok(Vp3ThreadHeader {
-        _next_color_offset_from_top_of_color,
-        x_offset_a,
-        y_offset_a,
-        color,
-        color_table,
-        thread_code,
-        thread_name,
-        thread_manufacturer,
-        x_offset_b,
-        y_offset_b,
-        stitch_bytes,
-    })
+    Ok((
+        reader,
+        Vp3ThreadHeader {
+            thread_length,
+            x_offset_a,
+            y_offset_a,
+            color,
+            color_table,
+            thread_code,
+            thread_name,
+            thread_manufacturer,
+            x_offset_b,
+            y_offset_b,
+            stitch_bytes,
+        },
+    ))
 }
 
 pub fn read_stitches(ub_reader: &mut dyn Read, thread: &Vp3ThreadHeader) -> Result<Vec<StitchGroup>, ReadError> {
@@ -213,20 +236,22 @@ mod tests {
     #[test]
     fn test_read_thread_header_t42_1_vp3() {
         // T42-1.vp3 StartOffset(h): 000000E2, EndOffset(h): 00000141, Length(h): 00000060
-        let data: [u8; 96] = [
-            0x00, 0x05, 0x00, 0x00, 0x00, 0x8B, 0x1B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00,
-            0x00, 0xFF, 0x00, 0x00, 0x00, 0x05, 0x28, 0x00, 0x04, 0x31, 0x33, 0x37, 0x36, 0x00, 0x0A, 0x53, 0x61, 0x6C,
-            0x65, 0x6D, 0x20, 0x42, 0x6C, 0x75, 0x65, 0x00, 0x10, 0x4D, 0x61, 0x64, 0x65, 0x69, 0x72, 0x61, 0x20, 0x52,
-            0x61, 0x79, 0x6F, 0x6E, 0x20, 0x34, 0x30, 0x00, 0x00, 0x82, 0xDC, 0x00, 0x00, 0x3C, 0x8C, 0x00, 0x01, 0x00,
-            0x00, 0x00, 0x8A, 0xD5, 0x0A, 0xF6, 0x00, 0x80, 0x01, 0xFD, 0x26, 0xFD, 0x58, 0x80, 0x02, 0xF6, 0x0A, 0x05,
-            0xFB, 0x05, 0xFB, 0xFB, 0x05, 0x05,
+        let mut data: &[u8] = &[
+            0x00, 0x05, 0x00, 0x00, 0x00, 0x8B, 0x1B, /* Header starts here */ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x05, 0x28, 0x00, 0x04, 0x31, 0x33, 0x37, 0x36,
+            0x00, 0x0A, 0x53, 0x61, 0x6C, 0x65, 0x6D, 0x20, 0x42, 0x6C, 0x75, 0x65, 0x00, 0x10, 0x4D, 0x61, 0x64, 0x65,
+            0x69, 0x72, 0x61, 0x20, 0x52, 0x61, 0x79, 0x6F, 0x6E, 0x20, 0x34, 0x30, 0x00, 0x00, 0x82, 0xDC, 0x00, 0x00,
+            0x3C, 0x8C, 0x00, 0x01, 0x00, 0x00, 0x00, 0x8A, 0xD5, /* Header ends here */
+            0x0A, 0xF6, 0x00, 0x80, 0x01, 0xFD, 0x26, 0xFD, 0x58, 0x80, 0x02, 0xF6, 0x0A, 0x05, 0xFB, 0x05, 0xFB, 0xFB,
+            0x05, 0x05,
         ];
 
-        let thread = read_thread_header(&mut &data[..]).unwrap();
+        let (take_reader, thread) = read_thread_header(&mut data).unwrap();
+        assert_eq!(take_reader.limit(), 35611 - (6 + (18 * 3) + 9));
         assert_eq!(
             thread,
             Vp3ThreadHeader {
-                _next_color_offset_from_top_of_color: 35611, /* 0x00_00_8B_1B */
+                thread_length: 35611, /* 0x00_00_8B_1B */
                 x_offset_a: 0,
                 y_offset_a: 0,
                 color: (0, 0, 0),
@@ -253,11 +278,11 @@ mod tests {
             0x02, 0xF6, 0x0A, 0x05, 0xFB, 0x05,
         ];
 
-        let thread = read_thread_header(&mut &data[..]).unwrap();
+        let (_, thread) = read_thread_header(&mut &data[..]).unwrap();
         assert_eq!(
             thread,
             Vp3ThreadHeader {
-                _next_color_offset_from_top_of_color: 7355, /* 0x00_00_1C_BB */
+                thread_length: 7355, /* 0x00_00_1C_BB */
                 x_offset_a: 0,
                 y_offset_a: 0,
                 color: (0x00, 0xDE, 0xE6),

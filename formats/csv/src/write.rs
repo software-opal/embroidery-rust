@@ -69,16 +69,16 @@ fn write_vars(pattern: &Pattern, writer: &mut dyn Write) -> Result<(), WriteErro
         match attr {
             PatternAttribute::Arbitrary(key, value) => {
                 write_csv_var!(writer, key, value)?;
-            }
+            },
             PatternAttribute::Title(value) => {
                 write_csv_var!(writer, "Title", value)?;
-            }
+            },
             PatternAttribute::Author(value) => {
                 write_csv_var!(writer, "Author", value)?;
-            }
+            },
             PatternAttribute::Copyright(value) => {
                 write_csv_var!(writer, "Copyright", value)?;
-            }
+            },
         };
     }
     writeln!(writer)?;
@@ -117,7 +117,7 @@ fn write_stitches(pattern: &Pattern, writer: &mut dyn Write) -> Result<(), Write
             StitchInfo::Color(_, s) => {
                 write_csv_stitch!(writer, "JUMP", s)?;
                 write_csv_stitch!(writer, "COLOR", s)?;
-            }
+            },
             StitchInfo::Cut(s) => write_csv_stitch!(writer, "TRIM", s)?,
             StitchInfo::End(s) => write_csv_stitch!(writer, "END", s)?,
             StitchInfo::Jump(s) => write_csv_stitch!(writer, "STITCH", s)?,

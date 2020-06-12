@@ -4,9 +4,7 @@ use embroidery_lib::prelude::*;
 
 use std::io::Read;
 
-use crate::common::{header, util};
-
-mod thread;
+use crate::common::{header, thread};
 
 #[derive(Default)]
 pub struct Vp3PatternReader {}
@@ -22,26 +20,7 @@ impl PatternReader for Vp3PatternReader {
             header::Header::Pattern(head) => head,
             _ => unreachable!(),
         };
-        let mut cgs = Vec::with_capacity(header.number_of_threads);
-        for i in 0..header.number_of_threads {
-            let thread_header = maybe_read_with_context!(
-                thread::read_thread_header(&mut reader),
-                "Reading thread {} of {}",
-                i,
-                header.number_of_threads,
-            )?;
-            let stitches = maybe_read_with_context!(
-                thread::read_stitches(&mut reader, &thread_header),
-                "Reading thread {} of {}",
-                i,
-                header.number_of_threads,
-            )?;
-            cgs.push(ColorGroup {
-                thread: Some(thread_header.to_thread()),
-                stitch_groups: stitches,
-            });
-        }
-
+        let cgs = thread::read_threads(&mut reader, header.number_of_threads)?;
         Ok(Pattern {
             attributes: vec![],
             color_groups: cgs,

@@ -33,10 +33,12 @@ impl CollectionReader for Vf3CollectionReader {
             Header::Font(font_header) => font_header,
             _ => unreachable!(),
         };
-        read_font_pattern(file, &header.character_offsets)?;
-
-        // TODO: This
-        Err(ReadError::invalid_format("oops"))
+        let patterns = read_font_pattern(file, &header.character_offsets)?;
+        // todo!();
+        Ok(PatternCollection {
+            attributes: vec![],
+            patterns,
+        })
     }
 }
 
