@@ -116,6 +116,8 @@ impl StitchType {
             StitchType::Regular => StitchType::Stop,
         }
     }
+
+    #[allow(dead_code)]
     pub fn with_jump(self) -> Self {
         match self {
             StitchType::Stop => StitchType::JumpStop,
@@ -179,7 +181,7 @@ impl StitchInformation {
                     ((val >> 8) & 0xFF) as u8,
                     option_bits | (val & 0xFF) as u8,
                 ])
-            },
+            }
             StitchInformation::End => Some([0x00, 0x00, 0xF3]),
         }
     }

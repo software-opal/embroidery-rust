@@ -133,6 +133,7 @@ types:
             type: u1
           - id: y
             type: u1
+          # Skip stitch if x == 0x80 and y != 0x01
           - id: ext
             type: stitch_ext
             if: x == 0x80 and y == 0x01
