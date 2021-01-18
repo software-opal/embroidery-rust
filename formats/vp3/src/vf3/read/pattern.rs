@@ -69,14 +69,23 @@ pub fn read_char_pattern(
     read_exact_magic!(unconstrained_reader, [0x00, 0x11, 0x00])?;
     let length = read_int!(unconstrained_reader, u32, BigEndian)?.into();
     let reader = &mut unconstrained_reader.take(length);
-    let unknown_1 = read_exact!(reader, vec![_; 51])?;
-    let settings = read_wide_string_field(reader, "settings")?;
+    let unknown_1 = read_exact!(reader, vec![_; 16])?;
+    read_exact_magic!(reader, [0; 11])?;
+
     let unknown_2 = read_exact!(reader, vec![_; 24])?;
+    println!("Unknown ..16: {:X?}", &unknown_1);
+    println!("Unknown 27..: {:X?}", &unknown_2);
+
+    let settings = read_wide_string_field(reader, "settings")?;
+    read_exact_magic!(
+        reader,
+        [
+            0x64, 0x64, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
+            0x78, 0x78, 0x50, 0x50, 0x01, 0x00
+        ]
+    )?;
     let software_string = read_wide_string_field(reader, "software_string")?;
     let thread_count = read_int!(reader, u16, BigEndian)?.into();
-
-    println!("Unknown 1: {:?}", unknown_1);
-    println!("Unknown 2: {:?}", unknown_2);
 
     let threads = thread::read_threads(reader, thread_count)?;
 

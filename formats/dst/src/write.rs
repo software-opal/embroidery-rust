@@ -82,9 +82,6 @@ fn build_header(pattern: &Pattern, dst_stitches: &[StitchInformation]) -> Result
     write!(data, "MY:{: <+6}\r", 0)?;
     write!(data, "PD:{: <6}\r\0\0\0", ['*'; 6].iter().collect::<String>())?;
 
-    debug!("{:?}", String::from_utf8_lossy(&data));
-    debug!("{:?}", data.len());
-
     assert!(data.len() == 128);
     Ok(data)
 }
@@ -142,7 +139,6 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
                     inter_group_jumps.push(StitchInformation::Move(0, 0, StitchType::Stop))
                 }
             }
-            debug!("Jumps: {:?}", &inter_group_jumps);
             re.append(&mut inter_group_jumps);
             for s in iter {
                 let dx = ((s.x * 10.).trunc() as i32) - ox;
@@ -153,12 +149,6 @@ fn into_dst_stitches(pattern: &Pattern) -> Result<Vec<StitchInformation>, WriteE
                         Some(idx),
                         "Stitch jump is too big for the format",
                     ));
-                }
-                if idx < 10 {
-                    debug!(
-                        "Start: ({}, {}); Stitch: {:?}; Move: ({}, {}); Dest: ({}, {});",
-                        ox, oy, s, dx, dy, ox, oy
-                    );
                 }
                 ox += dx;
                 oy += dy;
@@ -187,8 +177,6 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
     let delta_x = ((s.x * 10.) as i32) - ox;
     let delta_y = ((s.y * 10.) as i32) - oy;
 
-    debug!("Target: ({}, {});", delta_x, delta_y);
-
     if delta_x == 0 && delta_y == 0 {
         Vec::new()
     } else if delta_x.abs() <= MAX_JUMP && delta_y.abs() <= MAX_JUMP {
@@ -209,10 +197,6 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
         let mut cx = 0;
         let mut cy = 0;
         let mut re = Vec::with_capacity(chunks as usize);
-        debug!(
-            "Abs: ({}, {}); Signs: ({}, {}); Chunks: {}; Jump: ({}, {})",
-            abs_x, abs_y, sign_x, sign_y, chunks, step_x, step_y
-        );
         for i in 0..=chunks {
             let (nx, ny) = (i32::min(abs_x, i * step_x), i32::min(abs_y, i * step_y));
             re.push(StitchInformation::Move(
@@ -220,15 +204,6 @@ fn safe_jump_to(ox: i32, oy: i32, s: &Stitch) -> Vec<StitchInformation> {
                 sign_y * (ny - cy) as i8,
                 StitchType::Jump,
             ));
-            debug!(
-                "C: ({}, {}); N: ({}, {}), move: ({}, {})",
-                cx,
-                cy,
-                nx,
-                ny,
-                sign_x * (cx - nx) as i8,
-                sign_y * (cy - ny) as i8
-            );
             cx = nx;
             cy = ny;
         }
@@ -261,6 +236,6 @@ mod test {
         )
         .unwrap();
 
-        assert_eq!("LA:Ä               \rST:    314\rCO:  0\r+X:46   \r-X:-46  \r+Y:-36  \r-Y:-169 \rAX:+0    \rAY:+0    \rMX:+0    \rMY:+0    \rPD:******\r\u{0}\u{0}\u{0}".bytes().collect(), res)
+        assert_eq!("LA:Ä               \rST:      0\rCO:  0\r+X:0    \r-X:0    \r+Y:0    \r-Y:0    \rAX:+0    \rAY:+0    \rMX:+0    \rMY:+0    \rPD:******\r\u{0}\u{0}\u{0}", String::from_utf8(result).unwrap());
     }
 }

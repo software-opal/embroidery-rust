@@ -43,30 +43,30 @@ fn write_pattern(
         let extensions = format.extensions();
 
         assert!(!extensions.is_empty());
-        if let Some(writer) = format.pattern_writer() {
-            let ext = extensions[0];
-            let output = path.with_file_name(format!("{}.{}", file_name, ext));
-            let mut out = BufWriter::new(
-                File::create(&output).map_err(|e| format!("Error writing to {}: {:?}", output.to_string_lossy(), e))?,
-            );
-            match writer.write_pattern(&pattern, &mut out) {
-                Ok(()) => {}
-                Err(WriteError::UnsupportedStitch {
-                    stitch, idx: maybe_idx, ..
-                }) => {
-                    let idx = match maybe_idx {
-                        Some(idx) => format!("{}", idx),
-                        None => ("unknown").to_string(),
-                    };
-                    return Err(format!(
-                        "Writer {} cannot write one of the stitches {:?}(at {}): {}",
-                        ext, stitch, idx, file_name,
-                    )
-                    .into());
-                }
-                Err(WriteError::Std(err, _)) => return Err(err.into()),
-            }
-        }
+        //     if let Some(writer) = format.pattern_writer() {
+        //         let ext = extensions[0];
+        //         let output = path.with_file_name(format!("{}.{}", file_name, ext));
+        //         let mut out = BufWriter::new(
+        //             File::create(&output).map_err(|e| format!("Error writing to {}: {:?}", output.to_string_lossy(), e))?,
+        //         );
+        //         match writer.write_pattern(&pattern, &mut out) {
+        //             Ok(()) => {}
+        //             Err(WriteError::UnsupportedStitch {
+        //                 stitch, idx: maybe_idx, ..
+        //             }) => {
+        //                 let idx = match maybe_idx {
+        //                     Some(idx) => format!("{}", idx),
+        //                     None => ("unknown").to_string(),
+        //                 };
+        //                 return Err(format!(
+        //                     "Writer {} cannot write one of the stitches {:?}(at {}): {}",
+        //                     ext, stitch, idx, file_name,
+        //                 )
+        //                 .into());
+        //             }
+        //             Err(WriteError::Std(err, _)) => return Err(err.into()),
+        //         }
+        //     }
     }
     Ok(())
 }
