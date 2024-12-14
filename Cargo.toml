@@ -16,9 +16,9 @@ members = [
 ]
 
 [dependencies]
-failure = "^0.1.7"
-log = "^0.4.8"
-simplelog = "^0.7.5"
+failure = "0.1.8"
+log = "0.4.20"
+simplelog = "0.12.1"
 embroidery-lib = { path = "./embroidery-lib" }
 embroidery-fmt-csv = { path = "./formats/csv" }
 embroidery-fmt-dst = { path = "./formats/dst" }

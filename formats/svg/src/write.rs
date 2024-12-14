@@ -1,7 +1,8 @@
 use std::io::Write;
 
-use palette::{Lch, Srgb};
-use svgtypes::{PathBuilder, WriteBuffer, WriteOptions};
+use palette::{Lch, convert::FromColorUnclamped};
+use svgtypes::{PathParser, PathSegment};
+//use svgtypes::{WriteBuffer, WriteOptions, Path};
 
 use embroidery_lib::errors::WriteResult as Result;
 use embroidery_lib::format::PatternWriter;
@@ -24,8 +25,8 @@ impl PatternWriter for SvgPatternWriter {
     }
 }
 
-fn generate_color(idx: usize, total: usize) -> Srgb {
-    Lch::new(50., 100., (idx as f32) * 360.0 / (total as f32)).into()
+fn generate_color(idx: usize, total: usize) -> palette::Srgb {
+    palette::rgb::Rgb::from_color_unclamped(Lch::new(50., 100., (idx as f32) * 360.0 / (total as f32)))
 }
 
 fn write_pattern(pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
@@ -81,6 +82,11 @@ fn write_pattern(pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
         } else {
             used_random_colors += 1;
             generate_color(used_random_colors - 1, total_colors).into()
+            /*Color {
+                red: value.red as u8,
+                green: value.green as u8,
+                blue: value.blue as u8,
+            }*/
         };
         writeln!(writer, "    <g")?;
         writeln!(writer, "     fill='none'")?;
@@ -91,15 +97,17 @@ fn write_pattern(pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
         writeln!(writer, "    >")?;
 
         for sg in cg.stitch_groups.iter() {
-            let mut path = PathBuilder::with_capacity(sg.stitches.len() + 2);
+            //let mut path = Path::with_capacity(sg.stitches.len() + 2);
+            let mut path = Vec::new();
             if let Some(stitch) = sg.stitches.get(0) {
-                path = path.move_to(stitch.x, max_y - stitch.y);
+                //path.push_move_to(stitch.x, max_y - stitch.y);
+                path.push
             }
             writeln!(writer, "      <g stroke='none' fill='{}' class='emb_ignore'>", color)?;
             for (i, stitch) in sg.stitches.iter().enumerate() {
                 if i != 0 {
                     // reverse y axis so +ve y moves up
-                    path = path.line_to(stitch.x, max_y - stitch.y);
+                    path.push_line_to(stitch.x, max_y - stitch.y);
                 }
                 writeln!(
                     writer,
@@ -113,7 +121,7 @@ fn write_pattern(pattern: &Pattern, writer: &mut dyn Write) -> Result<()> {
             writeln!(
                 writer,
                 "      <path d='{}' />",
-                path.finalize().with_write_opt(&opt).to_string()
+                path.with_write_opt(&opt).to_string()
             )?;
         }
         writeln!(writer, "    </g>")?;

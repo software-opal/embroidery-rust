@@ -6,5 +6,5 @@ edition = "2018"
 
 [dependencies]
 embroidery-lib = { path = "../../embroidery-lib" }
-svgtypes = "^0.1.1"
-palette = "^0.4.1"
+svgtypes = "0.13.0"
+palette = "0.7.3"

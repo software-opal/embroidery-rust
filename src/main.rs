@@ -29,6 +29,7 @@ fn main() -> Result<(), Error> {
             .set_location_level(LevelFilter::Error)
             .build(),
         TerminalMode::Mixed,
+        ColorChoice::Auto
     )?;
 
     let loader_unloaders = get_all();

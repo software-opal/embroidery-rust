@@ -1,6 +1,7 @@
 use embroidery_lib::errors::{Error as EmbError, ErrorWithContext, ReadError, StdError as EmbStdError, WriteError};
 
-use simplelog::TermLogError;
+use log::SetLoggerError;
+//use simplelog::TermLogError;
 use std::fmt;
 use std::io;
 
@@ -18,7 +19,7 @@ pub enum Error {
     Fmt(#[cause] fmt::Error),
 
     #[fail(display = "Logger Error: {}", _0)]
-    Log(#[cause] TermLogError),
+    Log(#[cause] SetLoggerError),
 
     #[fail(display = "Other Error: {}", _0)]
     Custom(String),
@@ -75,8 +76,8 @@ impl From<EmbStdError> for Error {
     }
 }
 
-impl From<TermLogError> for Error {
-    fn from(err: TermLogError) -> Self {
+impl From<SetLoggerError> for Error {
+    fn from(err: SetLoggerError) -> Self {
         Error::Log(err)
     }
 }
